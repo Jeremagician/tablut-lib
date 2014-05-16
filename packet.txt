@@ -1,0 +1,76 @@
+				Tablut Packet Specification - Draft
+
+Generic Packet Structure:
+
+struct packet
+{
+	uint16 type;   /* Packet ID */
+	uint16 length; /* Packet length */
+	void *data;	   /* Packet data */
+}
+
+Packets:
+
+# Error - 0
+struct error_data
+{
+	uint16 error_id;
+};
+
+enum error_id
+{
+	ERROR_UNKNOWN = 0,
+	ERROR_UNSUPPORTED = 1, 		/* Unsupported protocol */
+	ERROR_SPECTATOR_FULL = 2,
+	ERROR_PLAYER_FULL = 3,
+	ERROR_BAD_LOBBY = 4
+};
+
+# Hello - 1
+struct hello_data
+{
+	uint8 protocol_version;		/* Currently 1 */
+	uint8 player_id;
+	uint8 name_length;
+	char name[name_length];
+};
+
+player_id :
++-+-+-+-+-+-+-+-+
+|A|      B      |
++-+-+-+-+-+-+-+-+
+
+A : spectator bit
+#define IS_SPECTATOR(player_id) (player_id & (1 << 7))
+
+B : player id
+
+# Lobby - 2
+
+struct lobby_data
+{
+	uint8 player_count;
+	struct
+	{
+		uint8 player_id;
+		uint8 player_team;
+	} players[player_count];
+};
+
+player_team:
+
++-+-+-+-+-+-+-+-+
+| A |B|    C    |
++-+-+-+-+-+-+-+-+
+
+A :
+00 = None
+01 = Muscovite
+10 = Swedish
+
+B :
+0 = Player
+1 = Bot
+
+C :
+if b = 1, c is the bot difficulty
