@@ -2,7 +2,7 @@
  * A packet is just defined as an integer associated with a struct, or with
  * nothing.
  *
- * The fisrt argument is the name of the packet, followed by the associated
+ * The first argument is the name of the packet, followed by the associated
  * integer.  It will defined a public constant of the form: PACKET_name.
  *
  * The associated structure (if any) must be defined in struct_io.def.h .
@@ -10,10 +10,10 @@
 
 #ifndef TEST
 
-PACKET_STRUCT(MOVE,      1, move)
-PACKET_STRUCT(GAUFRE,    2, gaufre)
-PACKET_EMPTY (SURRENDER, 3)
-PACKET_STRUCT(PLAYER_ID, 4, player_id)
+PACKET_STRUCT(ERROR, 0, error)
+PACKET_STRUCT(HELLO, 1, hello)
+PACKET_STRUCT(LOBBY, 2, lobby)
+PACKET_STRUCT(GAME_STATE, 3, game_state)
 
 #else
 

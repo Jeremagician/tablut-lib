@@ -1,5 +1,5 @@
-#ifndef COMMON_STRUCT_IO_H_
-#define COMMON_STRUCT_IO_H_
+#ifndef STRUCT_IO_H_
+#define STRUCT_IO_H_
 
 
 #include <stdlib.h>
@@ -7,7 +7,7 @@
 
 
 /*
- * Structure and size of the packed structure.
+ * Structure
  */
 #define BEGIN(name)							\
 	struct name {
@@ -15,15 +15,21 @@
 		uint8_t name;
 #define FIELD_16(name)							\
 		uint16_t name;
-#define FIELD_DYN(name, func)						\
-		void* name;
+#define FIELD_STRUCT(name, st)						\
+		struct st name;
+#define FIELD_DYN_8(name, func)						\
+		uint8_t *name;
+#define FIELD_DYN_STRUCT(name, st, func)				\
+		struct st *name;
 #define END()								\
 	};
 #include "struct_io.def.h"
 #undef  BEGIN
 #undef  FIELD_8
 #undef  FIELD_16
-#undef  FIELD_DYN
+#undef  FIELD_STRUCT
+#undef  FIELD_DYN_8
+#undef  FIELD_DYN_STRUCT
 #undef  END
 
 
@@ -40,14 +46,18 @@
 	void struct_io_free_##name(struct name *s);
 #define FIELD_8(name)
 #define FIELD_16(name)
-#define FIELD_DYN(name, func)
+#define FIELD_STRUCT(name, s)
+#define FIELD_DYN_8(name, func)
+#define FIELD_DYN_STRUCT(name, s, func)
 #define END()
 #include "struct_io.def.h"
 #undef  BEGIN
 #undef  FIELD_8
 #undef  FIELD_16
-#undef  FIELD_DYN
+#undef  FIELD_STRUCT
+#undef  FIELD_DYN_8
+#undef  FIELD_DYN_STRUCT
 #undef  END
 
 
-#endif /* COMMON_STRUCT_IO_H_ */
+#endif /* STRUCT_IO_H_ */

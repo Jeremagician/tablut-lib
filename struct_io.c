@@ -12,13 +12,19 @@
 #define BEGIN(name)							\
 	size_t struct_io_size_##name(struct name *s)			\
 	{								\
-		size_t size = 0;
+		size_t size = 0; int i;					\
+		(void)i;
 #define FIELD_8(name)							\
 		size += sizeof(s->name);
 #define FIELD_16(name)							\
 		size += sizeof(s->name);
-#define FIELD_DYN(name, func)						\
+#define FIELD_STRUCT(name, st)						\
+		size += struct_io_size_##st(&s->name);
+#define FIELD_DYN_8(name, func)						\
 		size += func(s);
+#define FIELD_DYN_STRUCT(name, st, func)				\
+		for (i = 0; i < func(s); i++)				\
+			size += struct_io_size_##st(&s->name[i]);
 #define END()								\
 		return size;						\
 	}
@@ -26,7 +32,9 @@
 #undef  BEGIN
 #undef  FIELD_8
 #undef  FIELD_16
-#undef  FIELD_DYN
+#undef  FIELD_STRUCT
+#undef  FIELD_DYN_8
+#undef  FIELD_DYN_STRUCT
 #undef  END
 
 
@@ -80,16 +88,27 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 
 #define BEGIN(name)							\
 	int struct_io_read_##name(struct name *s, int fd)		\
-	{
+	{								\
+		int i;							\
+		(void)i;
 #define FIELD(name, func)						\
 		if (!readfull(fd, &s->name, sizeof(s->name)))		\
 			return 0;					\
 		s->name = func(s->name);
 #define FIELD_8(name)  FIELD(name, EMPTY)
 #define FIELD_16(name) FIELD(name, ntohs)
-#define FIELD_DYN(name, func)						\
-		if (!alloc_and_readfull(fd, &s->name, func(s)))		\
+#define FIELD_STRUCT(name, st)						\
+		if (!struct_io_read_##st(&s->name, fd))			\
 			return 0;
+#define FIELD_DYN_8(name, func)						\
+		if (!alloc_and_readfull(fd, (void**)&s->name, func(s)))	\
+			return 0;
+#define FIELD_DYN_STRUCT(name, st, func)				\
+		if (!(s->name = malloc(func(s) * sizeof(struct st))))	\
+			return 0;					\
+		for (i = 0; i < func(s); i++)				\
+			if (!struct_io_read_##st(&s->name[i], fd))	\
+				return 0;
 #define END()								\
 		return 1;						\
 	}
@@ -98,23 +117,34 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 #undef  FIELD
 #undef  FIELD_8
 #undef  FIELD_16
-#undef  FIELD_DYN
+#undef  FIELD_STRUCT
+#undef  FIELD_DYN_8
+#undef  FIELD_DYN_STRUCT
 #undef  END
 
 
 #define BEGIN(name)							\
 	int struct_io_write_##name(struct name *s, int fd)		\
 	{								\
-		uint32_t _tmp__;
+		uint32_t _tmp__;					\
+		int i;							\
+		(void)_tmp__; (void)i;
 #define FIELD(name, type, func)						\
 		_tmp__ = func(s->name);					\
 		if (!writefull(fd, &_tmp__, sizeof(s->name)))		\
 			return 0;
 #define FIELD_8(name)  FIELD(name, uint8_t, EMPTY)
 #define FIELD_16(name) FIELD(name, uint16_t, htons)
-#define FIELD_DYN(name, func)						\
+#define FIELD_STRUCT(name, st)						\
+		if (!struct_io_write_##st(&s->name, fd))		\
+			return 0;
+#define FIELD_DYN_8(name, func)						\
 		if (!writefull(fd, s->name, func(s)))			\
 			return 0;
+#define FIELD_DYN_STRUCT(name, st, func)				\
+		for (i = 0; i < func(s); i++)				\
+			if (!struct_io_write_##st(&s->name[i], fd))	\
+				return 0;
 #define END()								\
 		return 1;						\
 	}
@@ -123,25 +153,38 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 #undef  FIELD
 #undef  FIELD_8
 #undef  FIELD_16
-#undef  FIELD_DYN
+#undef  FIELD_STRUCT
+#undef  FIELD_DYN_8
+#undef  FIELD_DYN_STRUCT
 #undef  END
 
 
+/*
+ * Freeing won't work if a size of a dynamic field depends of another dynamic
+ * field.
+ */
 #define BEGIN(name)							\
 	void struct_io_free_##name(struct name *s)			\
 	{								\
-		(void)s;
+		int i;							\
+		(void)s; (void)i;
 #define FIELD_8(name)
 #define FIELD_16(name)
-#define FIELD_DYN(name, func)						\
+#define FIELD_STRUCT(name, st)						\
+		struct_io_free_##st(&s->name);
+#define FIELD_DYN_8(name, func)						\
 		if (s->name)						\
 			free(s->name);
+#define FIELD_DYN_STRUCT(name, st, func)				\
+		for (i = 0; i < func(s); i++)				\
+			struct_io_free_##st(&s->name[i]);
 #define END()								\
 	}
 #include "struct_io.def.h"
 #undef  BEGIN
-#undef  FIELD
 #undef  FIELD_8
 #undef  FIELD_16
-#undef  FIELD_DYN
+#undef  FIELD_STRUCT
+#undef  FIELD_DYN_8
+#undef  FIELD_DYN_STRUCT
 #undef  END

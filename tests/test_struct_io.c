@@ -10,42 +10,61 @@
 
 static inline void random_init(struct struct_io_test *s)
 {
-	static uint8_t dyn[2];
-	dyn[0] = random();
-	dyn[1] = random();
+	static uint8_t dyn8[2];
+	static struct substruct_io_test dyns[2];
 
-	s->field_8   = random();
-	s->field_16  = random();
-	s->field_dyn = &dyn[0];
+	dyn8[0] = random();
+	dyn8[1] = random();
+	dyns[0].nothing = random();
+	dyns[1].nothing = random();
+
+	s->f8   = random();
+	s->f16  = random();
+	s->fs.nothing = random();
+	s->fdyn8 = &dyn8[0];
+	s->fdyns = &dyns[0];
 }
 
+
+static void dump_buf(void *buf, size_t size)
+{
+	size_t i;
+	for (i = 0; i < size; i++)
+		fprintf(stderr, "%02X",
+		        (unsigned int)*(((uint8_t*)buf) + i));
+}
+
+
+static int compare_field(const char *name,
+                         void *original, void *target, size_t size)
+{
+	if (memcmp(original, target, size)) {
+		fprintf(stderr, "Fields %s different:\n", name);
+		fprintf(stderr, "\toriginal: "); dump_buf(original, size); fputc('\n', stderr);
+		fprintf(stderr, "\ttarget: "); dump_buf(target, size); fputc('\n', stderr);
+		return 0;
+	}
+	return 1;
+}
+
+
+#define return_on_different(field, original, target)			\
+	if (!compare_field(#field, &original->field, &target->field,	\
+	                   sizeof(target->field)))			\
+		return 0;
+#define return_on_different_dyn(field, original, target, size)		\
+	if (!compare_field(#field, original->field, target->field,	\
+	                   sizeof(*target->field) * (size_t)size))	\
+		return 0;
 
 static int compare(struct struct_io_test *original,
                    struct struct_io_test *test)
 {
-	if (memcmp(&original->field_8, &test->field_8, sizeof(test->field_8))) {
-		fprintf(stderr,
-		        "Fields field_8 different: got %u, expected %u\n",
-		        (unsigned)original->field_8, (unsigned)test->field_8);
-		return 0;
-	}
-	if (memcmp(&original->field_16, &test->field_16, sizeof(test->field_16))) {
-		fprintf(stderr,
-		        "Fields field_16 different: got %u, expected %u\n",
-		        (unsigned)original->field_16, (unsigned)test->field_16);
-		return 0;
-	}
-	if (get_dyn_size(original) != get_dyn_size(test)) {
-		fprintf(stderr, "Different size for dynamic field: %u and %u\n",
-			(unsigned)get_dyn_size(original), (unsigned)get_dyn_size(test));
-		return 0;
-	}
-	if (memcmp(original->field_dyn, test->field_dyn, get_dyn_size(test))) {
-		fprintf(stderr,
-		        "Fields field_dyn different: got %u, expected %u\n",
-		        *(unsigned*)original->field_dyn, *(unsigned*)test->field_dyn);
-		return 0;
-	}
+	return_on_different(f8, original, test);
+	return_on_different(f16, original, test);
+	return_on_different(fs.nothing, original, test);
+	return_on_different_dyn(fdyn8, original, test, get_dyn8_size(test));
+	return_on_different_dyn(fdyns, original, test, get_dyns_size(test));
 	return 1;
 }
 
