@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 project(tafl-lib)
 
+include_directories(.)
 set(
   src_lib
   packet.c packet.h packet.def.h
@@ -8,5 +9,7 @@ set(
 )
 
 add_library(tafl-lib STATIC ${src_lib})
-
 set_target_properties(tafl-lib PROPERTIES OUTPUT_NAME tafl)
+
+enable_testing()
+add_subdirectory(tests)
