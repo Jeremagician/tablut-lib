@@ -8,7 +8,5 @@ set(
   struct_io.c struct_io.h struct_io.def.h struct_io.func.h
 )
 
-add_library(tafl STATIC ${src_lib})
-
 enable_testing()
 add_subdirectory(tests)
