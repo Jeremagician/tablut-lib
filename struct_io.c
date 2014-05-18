@@ -78,7 +78,7 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 		n += ret;
 	}
 	if (ret == -1)
-		fprintf(stderr, "Reading %i bytes: %s\n", (int)nbyte, strerror(errno));
+		fprintf(stderr, "Writing %i bytes: %s\n", (int)nbyte, strerror(errno));
 	return ret >= 0;
 }
 
