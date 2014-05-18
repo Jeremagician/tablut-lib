@@ -1,4 +1,4 @@
-set(SRC "${CMAKE_SOURCE_DIR}")
+set(SRC "${PROJECT_SOURCE_DIR}")
 add_definitions(-DTEST)
 
 add_executable(test_struct_io test_struct_io.c ${SRC}/struct_io.c)
