@@ -12,5 +12,3 @@ add_library(tafl STATIC ${src_lib})
 
 enable_testing()
 add_subdirectory(tests)
-
-install(TARGETS tafl ARCHIVE DESTINATION lib)
