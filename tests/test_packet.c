@@ -9,8 +9,9 @@
 
 static int test_send(int tmp)
 {
-	static uint8_t dyn[2] = {1, 6};
-	struct struct_io_test test = {3, 1, dyn};
+	static uint8_t dyn8[2];
+	struct substruct_io_test dyns[2];
+	struct struct_io_test test = {3, 1, {0}, &dyn8[0], &dyns[0]};
 
 	if (!send_packet(tmp, PACKET_TEST, &test))
 		return 0;
