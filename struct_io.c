@@ -161,7 +161,8 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 
 /*
  * Freeing won't work if a size of a dynamic field depends of another dynamic
- * field.
+ * field.  We must first store the size somewhere and then retrieve them when
+ * needed.
  */
 #define BEGIN(name)							\
 	void struct_io_free_##name(struct name *s)			\
