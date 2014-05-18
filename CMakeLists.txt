@@ -8,8 +8,9 @@ set(
   struct_io.c struct_io.h struct_io.def.h struct_io.func.h
 )
 
-add_library(tafl-lib STATIC ${src_lib})
-set_target_properties(tafl-lib PROPERTIES OUTPUT_NAME tafl)
+add_library(tafl STATIC ${src_lib})
 
 enable_testing()
 add_subdirectory(tests)
+
+install(TARGETS tafl ARCHIVE DESTINATION lib)
