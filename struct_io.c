@@ -56,7 +56,7 @@ static int alloc_and_readfull(int fildes, void **buf, size_t size)
 {
 	void *tmp = malloc(size);
 	if (!tmp) {
-		fprintf(stderr, "Can't allocate dynamic field: %s",
+		fprintf(stderr, "Can't allocate dynamic field: %s\n",
 		        strerror(errno));
 		return 0;
 	}
