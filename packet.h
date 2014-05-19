@@ -23,7 +23,7 @@ struct packet {
 	size_t real;
 };
 
-#define INIT_PACKET {{0, 0}, 0, 0}
+#define INIT_PACKET {{0, 0}, 0}
 
 int send_packet(int fd, int type, void *data);
 int recv_packet(int fd, struct packet *p);

@@ -53,11 +53,13 @@
 		struct_io_frombuf_##st(&s->name, &buf[offset]);		\
 		offset += struct_io_size_##st(&s->name);
 #define FIELD_DYN_8(name, func)						\
+		s->name = malloc(func(s));				\
 		for (i = 0; i < func(s); i++) {				\
 			s->name[i] = ((uint8_t*)buf)[offset];		\
 			offset += sizeof(*s->name);			\
 		}
 #define FIELD_DYN_STRUCT(name, st, func)				\
+		s->name = malloc(func(s) * sizeof(struct st));		\
 		for (i = 0; i < func(s); i++) {				\
 			struct_io_frombuf_##st(&s->name[i], &buf[offset]); \
 			offset += struct_io_size_##st(&s->name[i]);	\
