@@ -6,28 +6,31 @@
 
 #define PACKET_STRUCT(name, id, s)					\
 	PACKET_##name = id,
-#define PACKET_EMPTY(name, id)						\
-	PACKET_##name = id,
 enum {
 #include "packet.def.h"
 	PACKET_NONE = 0
 };
 #undef  PACKET_STRUCT
-#undef  PACKET_EMPTY
 
 
+#define PACKET_STRUCT(name, id, s)					\
+	struct s s;
 struct packet {
 	struct packet_header header;
-	char *data;
-
-	size_t real;
+	union {
+#include "packet.def.h"
+	} data;
 };
+#undef  PACKET_STRUCT
 
-#define INIT_PACKET {{0, 0}, 0}
 
-int send_packet(int fd, int type, void *data);
-int recv_packet(int fd, struct packet *p);
-void free_packet(struct packet *p);
+#define INIT_PACKET { 0 }
+
+
+void packet_frombuf(struct packet *packet, char *buf);
+void packet_tobuf(struct packet *packet, char *buf);
+size_t packet_length(int type, void *data);
+void packet_free(struct packet *packet);
 
 
 #endif /* _PACKET_H_ */

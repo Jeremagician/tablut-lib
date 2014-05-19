@@ -1,11 +1,10 @@
 /*
- * A packet is just defined as an integer associated with a struct, or with
- * nothing.
+ * A packet is just defined as an integer associated with a struct.
  *
  * The first argument is the name of the packet, followed by the associated
  * integer.  It will defined a public constant of the form: PACKET_name.
  *
- * The associated structure (if any) must be defined in struct_io.def.h .
+ * The associated structure must be defined in struct_io.def.h .
  */
 
 #ifndef TEST
@@ -17,7 +16,6 @@ PACKET_STRUCT(GAME_STATE, 3, game_state)
 
 #else
 
-PACKET_STRUCT(TEST, 1, struct_io_test)
-PACKET_EMPTY(TESTE, 2)
+PACKET_STRUCT(TEST, 1, substruct_io_test)
 
 #endif
