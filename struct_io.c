@@ -38,6 +38,78 @@
 #undef  END
 
 
+#define BEGIN(name)							\
+	void struct_io_frombuf_##name(struct name *s, char *buf)	\
+	{								\
+		size_t offset = 0;					\
+		int i; (void)i;
+#define FIELD_8(name)							\
+		s->name = ((uint8_t*)buf)[offset];			\
+		offset += sizeof(s->name);
+#define FIELD_16(name)							\
+		s->name = ((uint16_t*)buf)[offset];			\
+		offset += sizeof(s->name);
+#define FIELD_STRUCT(name, st)						\
+		struct_io_frombuf_##st(&s->name, &buf[offset]);		\
+		offset += struct_io_size_##st(&s->name);
+#define FIELD_DYN_8(name, func)						\
+		for (i = 0; i < func(s); i++) {				\
+			s->name[i] = ((uint8_t*)buf)[offset];		\
+			offset += sizeof(*s->name);			\
+		}
+#define FIELD_DYN_STRUCT(name, st, func)				\
+		for (i = 0; i < func(s); i++) {				\
+			struct_io_frombuf_##st(&s->name[i], &buf[offset]); \
+			offset += struct_io_size_##st(&s->name[i]);	\
+		}
+#define END()								\
+	}
+#include "struct_io.def.h"
+#undef  BEGIN
+#undef  FIELD_8
+#undef  FIELD_16
+#undef  FIELD_STRUCT
+#undef  FIELD_DYN_8
+#undef  FIELD_DYN_STRUCT
+#undef  END
+
+
+#define BEGIN(name)							\
+	void struct_io_tobuf_##name(struct name *s, char *buf)		\
+	{								\
+		size_t offset = 0;					\
+		int i; (void)i;
+#define FIELD_8(name)							\
+		buf[offset] = s->name;					\
+		offset += sizeof(s->name);
+#define FIELD_16(name)							\
+		buf[offset] = s->name;					\
+		offset += sizeof(s->name);
+#define FIELD_STRUCT(name, st)						\
+		struct_io_tobuf_##st(&s->name, &buf[offset]);		\
+		offset += struct_io_size_##st(&s->name);
+#define FIELD_DYN_8(name, func)						\
+		for (i = 0; i < func(s); i++) {				\
+			buf[offset] = s->name[i];			\
+			offset += sizeof(*s->name);			\
+		}
+#define FIELD_DYN_STRUCT(name, st, func)				\
+		for (i = 0; i < func(s); i++) {				\
+			struct_io_tobuf_##st(&s->name[i], &buf[offset]); \
+			offset += struct_io_size_##st(&s->name[i]);	\
+		}
+#define END()								\
+	}
+#include "struct_io.def.h"
+#undef  BEGIN
+#undef  FIELD_8
+#undef  FIELD_16
+#undef  FIELD_STRUCT
+#undef  FIELD_DYN_8
+#undef  FIELD_DYN_STRUCT
+#undef  END
+
+
 static int readfull(int fildes, void *buf, size_t nbyte)
 {
 	ssize_t ret = 0;
