@@ -9,7 +9,7 @@
 
 static int test_tobuf(void *buf)
 {
-	struct packet p = INIT_PACKET;
+	struct packet p = PACKET_INIT;
 	p.data.substruct_io_test.nothing = 31;
 
 	packet_tobuf(&p, buf);
@@ -19,7 +19,7 @@ static int test_tobuf(void *buf)
 
 static int test_frombuf(void *buf)
 {
-	struct packet p = INIT_PACKET;
+	struct packet p = PACKET_INIT;
 
 	packet_frombuf(&p, buf);
 	return 1;

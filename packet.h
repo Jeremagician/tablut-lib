@@ -24,7 +24,7 @@ struct packet {
 #undef  PACKET_STRUCT
 
 
-#define INIT_PACKET { 0 }
+static const struct packet PACKET_INIT = { 0 };
 
 
 void packet_frombuf(struct packet *packet, char *buf);
