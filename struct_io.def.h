@@ -40,7 +40,7 @@ END()
 BEGIN(piece)
 	FIELD_8(id)
 	FIELD_8(move)
-	FIELD_8(catch)
+	FIELD_8(capt)
 END()
 
 BEGIN(rules)

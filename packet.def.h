@@ -14,6 +14,8 @@ PACKET_STRUCT(HELLO, 1, hello)
 PACKET_STRUCT(LOBBY, 2, lobby)
 PACKET_STRUCT(GAME_STATE, 3, game_state)
 
+PACKET_STRUCT(MOVE, 4, move)
+
 #else
 
 PACKET_STRUCT(TEST, 1, substruct_io_test)
