@@ -1,0 +1,62 @@
+#ifndef PROTOCOL_H_
+#define PROTOCOL_H_
+
+enum error_id
+{
+	ERROR_UNKNOWN = 0,
+	ERROR_UNSUPPORTED = 1, 		/* Unsupported protocol */
+	ERROR_PLAYER_FULL = 2,
+	ERROR_SPECTATOR_FULL = 3,
+	ERROR_BAD_MOVE = 4,
+};
+
+enum error_bad_move {
+	ERROR_BAD_MOVE_TYPE,                   /* Only MOVE type is allowed for client */
+	ERROR_BAD_MOVE_SAME_PLACE,             /* Cant' move to the same place */
+	ERROR_BAD_MOVE_BAD_DIRECTION,          /* Trying to move in a wrong direction */
+	ERROR_BAD_MOVE_CANT_BYPASS_PAWN,       /* Can't pass over another pawn */
+	ERROR_BAD_MOVE_CANT_BYPASS_FORTRESS,   /* Can't pass through a fortress */
+	ERROR_BAD_MOVE_BAD_COORDINATE_FROM,    /* Invalid 'from' coordinate */
+	ERROR_BAD_MOVE_CELL_NOT_FREE,          /* The destination tile is not free */
+	ERROR_BAD_MOVE_BAD_COORDINATE_TO,      /* Invalid 'to' coordinate */
+	ERROR_BAD_MOVE_BAD_OWNER,              /* The pawn is not owned by the player */
+};
+
+enum lobby_team {
+	/* 00 = None, 01 = Muscovite, 10 = Swedish */
+	/* 0 = Player, 1 = Bot */
+	/* In case of bot the last 5 bit is his difficulty */
+};
+
+/* Bitfield */
+enum player_type {
+	PLAYER_TYPE_SPECTATOR = (1 << 0),
+	PLAYER_TYPE_INFO      = (1 << 7) /* One-shot connection */
+};
+
+enum message_type {
+	MESSAGE_TYPE_EVERYONE = 0,
+	MESSAGE_TYPE_TEAM = 1,
+	MESSAGE_TYPE_PRIVATE = 2,
+};
+
+enum move_type {
+	MOVE_TYPE_POP = 0,
+	MOVE_TYPE_DEPOP = 1,
+	MOVE_TYPE_MOVE = 2,
+	MOVE_TYPE_UNDO = 3
+};
+
+enum quit_reason {
+	QUIT_REASON_UNKNOW = 0,
+	QUIT_REASON_QUIT = 1,
+	QUIT_REASON_RAGEQUIT = 2,
+};
+
+enum pawn_type {
+	PAWN_TYPE_MUSCOVITE = 1,
+	PAWN_TYPE_SWEDISH = 2,
+	PAWN_TYPE_KING = 3,
+};
+
+#endif /* PROTOCOL_H_ */
