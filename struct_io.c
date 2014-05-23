@@ -119,8 +119,8 @@ static int adapt_buffer(void **buf, size_t len)
 		}
 #define FIELD_DYN_STRUCT(name, st, func)                                \
 		for (i = 0; i < func(s); i++) {                         \
-			sio_tobuf_##st(&s->name[i], &buf[offset]); \
-			offset += sio_size_##st(&s->name[i]);     \
+			sio_tobuf_##st(&s->name[i], &buf[offset]);      \
+			offset += sio_size_##st(&s->name[i]);           \
 		}
 #define END()                                                           \
 	}
