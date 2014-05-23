@@ -7,7 +7,10 @@
 
 
 /*
- * Structure and his zero-initializer.
+ * Structure generation.
+ *
+ * An extra field is added for dynamic entries, user application must not
+ * access it or modify it.
  */
 #define BEGIN(name)                                                     \
 	struct name {
@@ -18,9 +21,9 @@
 #define FIELD_STRUCT(name, st)                                          \
 		struct st name;
 #define FIELD_DYN_8(name, func)                                         \
-		uint8_t *name;
+		uint8_t *name; int _##name##_len;
 #define FIELD_DYN_STRUCT(name, st, func)                                \
-		struct st *name;
+		struct st *name; int _##name##_len;
 #define END()                                                           \
 	};
 #include "struct_io.def.h"
@@ -34,7 +37,7 @@
 
 
 /*
- * Initializer to zero.  Portable application should only use this to initiaze
+ * Initializer to zero.  Portable application should only use this to initialize
  * the structure to zero.
  *
  * Read a structure from a file, write a structure to a file.
@@ -47,8 +50,10 @@
  * filled with 0, or with a structure already passed to this functions and not
  * already freed.  In the later, the allocated field (if any) can be reused.
  * You can not have any expectation on what will be reused or not and
- * application must considere old buffer as invalid, especially if reference
+ * application must considere old buffers as invalid, specially if reference
  * where keep somewhere else.
+ * On error, it is guaranteed that data inside the structure remains valid, but
+ * as stated just above, pointers may have change.
  *
  * Compute the (packed) size of the given structure.
  *

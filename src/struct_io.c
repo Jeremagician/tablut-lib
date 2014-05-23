@@ -9,18 +9,17 @@
 #include "struct_io.func.h"
 
 /*
- * Pedantic isn't very adapted for code generation:
- *   - Because some part of code may or may not be included, some elements will
- *     be tagged as 'unused'.  To avoid that we must used them for nothing,
- *     whenever they will effectively be used or not.
- *   - Code generation make extensive use of macros, and variadic macro.
- *     Pedantic dislike empty macro argument, we have to workaround that by
- *     defining an empty symbol.
- *
  * Code generation with macro make the code less readable and less harder to
  * work on it.  However it is a neat trick and I'm sure it fit in this case
- * very well because structure IO is very redondant.
+ * very well because structure IO is very redondant, and hard to get it fast.
  */
+
+
+/*
+ * For coherence, functions to convert endianess of byte.
+ */
+static inline const uint8_t ntohc(uint8_t c) { return c; }
+static inline const uint8_t htonc(uint8_t c) { return c; }
 
 
 #define BEGIN(name)                                                     \
@@ -28,6 +27,7 @@
 	{                                                               \
 		size_t size = 0; int i;                                 \
 		(void)i;
+
 #define FIELD_8(name)                                                   \
 		size += sizeof(s->name);
 #define FIELD_16(name)                                                  \
@@ -39,6 +39,7 @@
 #define FIELD_DYN_STRUCT(name, st, func)                                \
 		for (i = 0; i < func(s); i++)                           \
 			size += sio_size_##st(&s->name[i]);
+
 #define END()                                                           \
 		return size;                                            \
 	}
@@ -52,56 +53,70 @@
 #undef  END
 
 
-static int adapt_buffer(void **buf, size_t len)
+#define dynflen(s, field)                                               \
+	s._##field##_len
+
+static int adapt_dynfield(void **field, int *len, size_t fsize, int wlen)
 {
 	void *tmp;
-	tmp = malloc(len);
+
+	if (wlen <= *len)
+		return 1;
+
+	tmp = realloc(*field, *len * fsize);
 	if (!tmp)
 		return 0;
-	*buf = tmp;
+
+	*field = tmp;
+	*len = wlen;
 	return 1;
 }
 
 
-#define BEGIN(name)                                                     \
-	int sio_frombuf_##name(struct name *sp, char *buf)              \
-	{                                                               \
-		size_t offset = 0;                                      \
-		void (*const free_s)(struct name*) =                    \
-		      sio_free_##name;                                  \
-		struct name s = name##_ZERO;                            \
-		int i; (void)i;
-#define FIELD_8(name)                                                   \
-		s.name = ((uint8_t*)buf)[offset];                       \
-		offset += sizeof(s.name);
-#define FIELD_16(name)                                                  \
-		s.name = ((uint16_t*)buf)[offset];                      \
-		offset += sizeof(s.name);
-#define FIELD_STRUCT(name, st)                                          \
-		s.name = sp->name;                                      \
-		sio_frombuf_##st(&s.name, &buf[offset]);                \
-		offset += sio_size_##st(&s.name);
-#define FIELD_DYN_8(name, func)                                         \
-		if (!adapt_buffer((void**)&s.name, func(&s)))           \
-			goto fail;                                      \
-		for (i = 0; i < func(&s); i++) {                        \
-			s.name[i] = ((uint8_t*)buf)[offset];            \
-			offset += sizeof(*s.name);                      \
-		}
-#define FIELD_DYN_STRUCT(name, st, func)                                \
-		if (!adapt_buffer((void**)&s.name, func(&s) * sizeof(struct st))) \
-			goto fail;                                      \
-		for (i = 0; i < func(&s); i++) {                        \
-			sio_frombuf_##st(&s.name[i], &buf[offset]);     \
-			offset += sio_size_##st(&s.name[i]);            \
-		}
-#define END()                                                           \
-		*sp = s;                                                \
-		return 1;                                               \
-		goto fail;                                              \
-	fail:                                                           \
-		free_s(&s);                                             \
+#define popbufval(dest, buf, type, conv) do {                           \
+	dest = conv(*(type*)buf);                                       \
+	buf += sizeof(type);                                            \
+} while (0)
+
+#define popbufstruct(dest, stname, buf) do {                            \
+	sio_frombuf_##stname(&dest, buf);                               \
+	buf += sio_size_##stname(&dest);                                \
+} while (0)
+
+#define popbufdynval(s, field, flen, buf, type, conv) do { int i;       \
+	if (!adapt_dynfield((void**)&s.field, &dynflen(s, field),       \
+	                    sizeof(type), flen(&s)))                    \
 		return 0;                                               \
+	for (i = 0; i < dynflen(s, field); i++)                         \
+		popbufval(s.field[i], buf, type, conv);                 \
+} while (0)
+
+#define popbufdynstruct(s, field, stname, fsize, buf) do { int i;       \
+	if (!adapt_dynfield((void**)&s.field, &dynflen(s, field),       \
+	                    sizeof(*s.field), fsize(&s)))               \
+		return 0;                                               \
+	for (i = 0; i < dynflen(s, field); i++)                         \
+		popbufstruct(s.field[i], stname, buf);                  \
+} while (0)
+
+
+#define BEGIN(name)                                                     \
+	int sio_frombuf_##name(struct name *s, char *buf)               \
+	{
+
+#define FIELD_8(name)                                                   \
+		popbufval(s->name, buf, uint8_t, ntohc);
+#define FIELD_16(name)                                                  \
+		popbufval(s->name, buf, uint16_t, ntohs);
+#define FIELD_STRUCT(name, st)                                          \
+		popbufstruct(s->name, st, buf);
+#define FIELD_DYN_8(name, func)                                         \
+		popbufdynval((*s), name, func, buf, uint8_t, ntohc);
+#define FIELD_DYN_STRUCT(name, st, func)                                \
+		popbufdynstruct((*s), name, st, func, buf);
+
+#define END()                                                           \
+		return 1;                                               \
 	}
 #include "struct_io.def.h"
 #undef  BEGIN
@@ -113,30 +128,42 @@ static int adapt_buffer(void **buf, size_t len)
 #undef  END
 
 
+#define putbufval(buf, val, type, conv) do {                            \
+	*(type*)buf = conv(val);                                        \
+	buf += sizeof(type);                                            \
+} while (0)
+
+#define putbufstruct(buf, sval, stname) do {                            \
+	sio_tobuf_##stname(&sval, buf);                                 \
+	buf += sio_size_##stname(&sval);                                \
+} while (0)
+
+#define putbufdynval(s, field, buf, type, conv) do { int i;             \
+	for (i = 0; i < dynflen(s, field); i++)                         \
+		putbufval(buf, s.field[i], type, conv);                 \
+} while (0)
+
+#define putbufdynstruct(s, field, stname, buf) do { int i;              \
+	for (i = 0; i < dynflen(s, field); i++)                         \
+		putbufstruct(buf, s.field[i], stname);                  \
+} while (0)
+
+
 #define BEGIN(name)                                                     \
 	void sio_tobuf_##name(struct name *s, char *buf)                \
-	{                                                               \
-		size_t offset = 0;                                      \
-		int i; (void)i;
+	{
+
 #define FIELD_8(name)                                                   \
-		buf[offset] = s->name;                                  \
-		offset += sizeof(s->name);
+		putbufval(buf, s->name, uint8_t, htonc);
 #define FIELD_16(name)                                                  \
-		buf[offset] = s->name;                                  \
-		offset += sizeof(s->name);
+		putbufval(buf, s->name, uint16_t, htons);
 #define FIELD_STRUCT(name, st)                                          \
-		sio_tobuf_##st(&s->name, &buf[offset]);                 \
-		offset += sio_size_##st(&s->name);
+		putbufstruct(buf, s->name, st);
 #define FIELD_DYN_8(name, func)                                         \
-		for (i = 0; i < func(s); i++) {                         \
-			buf[offset] = s->name[i];                       \
-			offset += sizeof(*s->name);                     \
-		}
+		putbufdynval((*s), name, buf, uint8_t, htonc);
 #define FIELD_DYN_STRUCT(name, st, func)                                \
-		for (i = 0; i < func(s); i++) {                         \
-			sio_tobuf_##st(&s->name[i], &buf[offset]);      \
-			offset += sio_size_##st(&s->name[i]);           \
-		}
+		putbufdynstruct((*s), name, st, buf);
+
 #define END()                                                           \
 	}
 #include "struct_io.def.h"
@@ -194,9 +221,6 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 }
 
 
-/* pedantic disallow empty macros argument, here it is :P */
-#define EMPTY
-
 #define BEGIN(name)                                                     \
 	int sio_read_##name(struct name *s, int fd)                     \
 	{                                                               \
@@ -206,7 +230,7 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 		if (!readfull(fd, &s->name, sizeof(s->name)))           \
 			return 0;                                       \
 		s->name = func(s->name);
-#define FIELD_8(name)  FIELD(name, EMPTY)
+#define FIELD_8(name)  FIELD(name, ntohc)
 #define FIELD_16(name) FIELD(name, ntohs)
 #define FIELD_STRUCT(name, st)                                          \
 		if (!sio_read_##st(&s->name, fd))                       \
@@ -244,7 +268,7 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 		_tmp__ = func(s->name);                                 \
 		if (!writefull(fd, &_tmp__, sizeof(s->name)))           \
 			return 0;
-#define FIELD_8(name)  FIELD(name, uint8_t, EMPTY)
+#define FIELD_8(name)  FIELD(name, uint8_t, htonc)
 #define FIELD_16(name) FIELD(name, uint16_t, htons)
 #define FIELD_STRUCT(name, st)                                          \
 		if (!sio_write_##st(&s->name, fd))                      \
