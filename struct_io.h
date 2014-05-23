@@ -50,12 +50,12 @@
  * Compute the (packed) size of the given structure.
  */
 #define BEGIN(name)                                                     \
-	int struct_io_read_##name(struct name *s, int fd);              \
-	int struct_io_write_##name(struct name *s, int fd);             \
-	int struct_io_frombuf_##name(struct name *s, char *buf);        \
-	void struct_io_tobuf_##name(struct name *s, char *buf);         \
-	size_t struct_io_size_##name(struct name *s);                   \
-	void struct_io_free_##name(struct name *s);
+	int sio_read_##name(struct name *s, int fd);                    \
+	int sio_write_##name(struct name *s, int fd);                   \
+	int sio_frombuf_##name(struct name *s, char *buf);              \
+	void sio_tobuf_##name(struct name *s, char *buf);               \
+	size_t sio_size_##name(struct name *s);                         \
+	void sio_free_##name(struct name *s);
 #define FIELD_8(name)
 #define FIELD_16(name)
 #define FIELD_STRUCT(name, s)

@@ -75,16 +75,16 @@ END()
 
 #else
 
-BEGIN(substruct_io_test)
+BEGIN(sio_subtest)
 	FIELD_8(nothing)
 END()
 
-BEGIN(struct_io_test)
+BEGIN(sio_test)
 	FIELD_8(f8)
 	FIELD_16(f16)
-	FIELD_STRUCT(fs, substruct_io_test)
+	FIELD_STRUCT(fs, sio_subtest)
 	FIELD_DYN_8(fdyn8, get_dyn8_size)
-	FIELD_DYN_STRUCT(fdyns, substruct_io_test, get_dyns_size)
+	FIELD_DYN_STRUCT(fdyns, sio_subtest, get_dyns_size)
 END()
 
 #endif

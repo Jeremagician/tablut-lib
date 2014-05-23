@@ -27,13 +27,13 @@ static size_t get_move_count(struct game_state *s)
 
 #else
 
-static size_t get_dyn8_size(struct struct_io_test *s)
+static size_t get_dyn8_size(struct sio_test *s)
 {
 	(void)s;
 	return 2;
 }
 
-static size_t get_dyns_size(struct struct_io_test *s)
+static size_t get_dyns_size(struct sio_test *s)
 {
 	(void)s;
 	return 2;

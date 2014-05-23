@@ -10,7 +10,7 @@
 static int test_fill(void)
 {
 	struct packet p = PACKET_INIT;
-	struct substruct_io_test test = { 121 };
+	struct sio_subtest test = { 121 };
 	int ret = 1;
 	size_t length;
 
@@ -23,7 +23,7 @@ static int test_fill(void)
 		ret = 0;
 	}
 
-	length = struct_io_size_substruct_io_test(&test);
+	length = sio_size_sio_subtest(&test);
 	if (p.header.length != length) {
 		fprintf(stderr, "Packet length should be %zi instead of %zi.\n",
 		        length, p.header.length);
@@ -37,13 +37,13 @@ static int test_fill(void)
 static int test_packet_data(void)
 {
 	struct packet p = PACKET_INIT;
-	struct substruct_io_test test = { 210 };
+	struct sio_subtest test = { 210 };
 	char buf[sizeof(test)];
 
-	struct_io_tobuf_substruct_io_test(&test, buf);
+	sio_tobuf_sio_subtest(&test, buf);
 
 	p.header.type = PACKET_TEST;
-	p.header.length = struct_io_size_substruct_io_test(&test);
+	p.header.length = sio_size_sio_subtest(&test);
 	p.ndata = buf;
 
 	if (!get_packet_data(&p)) {

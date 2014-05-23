@@ -10,7 +10,7 @@
 
 
 #define BEGIN(name)                                                     \
-	size_t struct_io_size_##name(struct name *s)                    \
+	size_t sio_size_##name(struct name *s)                          \
 	{                                                               \
 		size_t size = 0; int i;                                 \
 		(void)i;
@@ -19,12 +19,12 @@
 #define FIELD_16(name)                                                  \
 		size += sizeof(s->name);
 #define FIELD_STRUCT(name, st)                                          \
-		size += struct_io_size_##st(&s->name);
+		size += sio_size_##st(&s->name);
 #define FIELD_DYN_8(name, func)                                         \
 		size += func(s);
 #define FIELD_DYN_STRUCT(name, st, func)                                \
 		for (i = 0; i < func(s); i++)                           \
-			size += struct_io_size_##st(&s->name[i]);
+			size += sio_size_##st(&s->name[i]);
 #define END()                                                           \
 		return size;                                            \
 	}
@@ -50,12 +50,12 @@ static int adapt_buffer(void **buf, size_t len)
 
 
 #define BEGIN(name)                                                     \
-	int struct_io_frombuf_##name(struct name *sp, char *buf)        \
+	int sio_frombuf_##name(struct name *sp, char *buf)              \
 	{                                                               \
 		size_t offset = 0;                                      \
 		int i; (void)i;                                         \
 		void (*const free_s)(struct name*) =                    \
-		      struct_io_free_##name;                            \
+		      sio_free_##name;                                  \
 		struct name s = { 0 };
 #define FIELD_8(name)                                                   \
 		s.name = ((uint8_t*)buf)[offset];                       \
@@ -65,8 +65,8 @@ static int adapt_buffer(void **buf, size_t len)
 		offset += sizeof(s.name);
 #define FIELD_STRUCT(name, st)                                          \
 		s.name = sp->name;                                      \
-		struct_io_frombuf_##st(&s.name, &buf[offset]);          \
-		offset += struct_io_size_##st(&s.name);
+		sio_frombuf_##st(&s.name, &buf[offset]);                \
+		offset += sio_size_##st(&s.name);
 #define FIELD_DYN_8(name, func)                                         \
 		if (!adapt_buffer((void**)&s.name, func(&s)))           \
 			goto fail;                                      \
@@ -78,8 +78,8 @@ static int adapt_buffer(void **buf, size_t len)
 		if (!adapt_buffer((void**)&s.name, func(&s) * sizeof(struct st))) \
 			goto fail;                                      \
 		for (i = 0; i < func(&s); i++) {                        \
-			struct_io_frombuf_##st(&s.name[i], &buf[offset]); \
-			offset += struct_io_size_##st(&s.name[i]);      \
+			sio_frombuf_##st(&s.name[i], &buf[offset]);     \
+			offset += sio_size_##st(&s.name[i]);            \
 		}
 #define END()                                                           \
 		*sp = s;                                                \
@@ -99,7 +99,7 @@ static int adapt_buffer(void **buf, size_t len)
 
 
 #define BEGIN(name)                                                     \
-	void struct_io_tobuf_##name(struct name *s, char *buf)          \
+	void sio_tobuf_##name(struct name *s, char *buf)                \
 	{                                                               \
 		size_t offset = 0;                                      \
 		int i; (void)i;
@@ -110,8 +110,8 @@ static int adapt_buffer(void **buf, size_t len)
 		buf[offset] = s->name;                                  \
 		offset += sizeof(s->name);
 #define FIELD_STRUCT(name, st)                                          \
-		struct_io_tobuf_##st(&s->name, &buf[offset]);           \
-		offset += struct_io_size_##st(&s->name);
+		sio_tobuf_##st(&s->name, &buf[offset]);                 \
+		offset += sio_size_##st(&s->name);
 #define FIELD_DYN_8(name, func)                                         \
 		for (i = 0; i < func(s); i++) {                         \
 			buf[offset] = s->name[i];                       \
@@ -119,8 +119,8 @@ static int adapt_buffer(void **buf, size_t len)
 		}
 #define FIELD_DYN_STRUCT(name, st, func)                                \
 		for (i = 0; i < func(s); i++) {                         \
-			struct_io_tobuf_##st(&s->name[i], &buf[offset]); \
-			offset += struct_io_size_##st(&s->name[i]);     \
+			sio_tobuf_##st(&s->name[i], &buf[offset]); \
+			offset += sio_size_##st(&s->name[i]);     \
 		}
 #define END()                                                           \
 	}
@@ -183,7 +183,7 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 #define EMPTY
 
 #define BEGIN(name)                                                     \
-	int struct_io_read_##name(struct name *s, int fd)               \
+	int sio_read_##name(struct name *s, int fd)                     \
 	{                                                               \
 		int i;                                                  \
 		(void)i;
@@ -194,7 +194,7 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 #define FIELD_8(name)  FIELD(name, EMPTY)
 #define FIELD_16(name) FIELD(name, ntohs)
 #define FIELD_STRUCT(name, st)                                          \
-		if (!struct_io_read_##st(&s->name, fd))                 \
+		if (!sio_read_##st(&s->name, fd))                       \
 			return 0;
 #define FIELD_DYN_8(name, func)                                         \
 		if (!alloc_and_readfull(fd, (void**)&s->name, func(s))) \
@@ -203,7 +203,7 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 		if (!(s->name = malloc(func(s) * sizeof(struct st))))   \
 			return 0;                                       \
 		for (i = 0; i < func(s); i++)                           \
-			if (!struct_io_read_##st(&s->name[i], fd))      \
+			if (!sio_read_##st(&s->name[i], fd))            \
 				return 0;
 #define END()                                                           \
 		return 1;                                               \
@@ -220,7 +220,7 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 
 
 #define BEGIN(name)                                                     \
-	int struct_io_write_##name(struct name *s, int fd)              \
+	int sio_write_##name(struct name *s, int fd)                    \
 	{                                                               \
 		uint32_t _tmp__;                                        \
 		int i;                                                  \
@@ -232,14 +232,14 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 #define FIELD_8(name)  FIELD(name, uint8_t, EMPTY)
 #define FIELD_16(name) FIELD(name, uint16_t, htons)
 #define FIELD_STRUCT(name, st)                                          \
-		if (!struct_io_write_##st(&s->name, fd))                \
+		if (!sio_write_##st(&s->name, fd))                      \
 			return 0;
 #define FIELD_DYN_8(name, func)                                         \
 		if (!writefull(fd, s->name, func(s)))                   \
 			return 0;
 #define FIELD_DYN_STRUCT(name, st, func)                                \
 		for (i = 0; i < func(s); i++)                           \
-			if (!struct_io_write_##st(&s->name[i], fd))     \
+			if (!sio_write_##st(&s->name[i], fd))           \
 				return 0;
 #define END()                                                           \
 		return 1;                                               \
@@ -261,20 +261,20 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
  * needed.  I don't see rigth now a nice way of doing it.
  */
 #define BEGIN(name)                                                     \
-	void struct_io_free_##name(struct name *s)                      \
+	void sio_free_##name(struct name *s)                            \
 	{                                                               \
 		int i;                                                  \
 		(void)s; (void)i;
 #define FIELD_8(name)
 #define FIELD_16(name)
 #define FIELD_STRUCT(name, st)                                          \
-		struct_io_free_##st(&s->name);
+		sio_free_##st(&s->name);
 #define FIELD_DYN_8(name, func)                                         \
 		if (s->name)                                            \
 			free(s->name);
 #define FIELD_DYN_STRUCT(name, st, func)                                \
 		for (i = 0; i < func(s); i++)                           \
-			struct_io_free_##st(&s->name[i]);
+			sio_free_##st(&s->name[i]);
 #define END()                                                           \
 	}
 #include "struct_io.def.h"

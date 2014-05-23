@@ -18,6 +18,6 @@ PACKET_STRUCT(MOVE, 4, move)
 
 #else
 
-PACKET_STRUCT(TEST, 1, substruct_io_test)
+PACKET_STRUCT(TEST, 1, sio_subtest)
 
 #endif

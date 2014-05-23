@@ -26,7 +26,7 @@ static size_t get_network_data_length(enum packet_type type, void *pdata)
 
 #define PACKET_STRUCT(name, id, s)                                      \
 	if (type == id)                                                 \
-		length = struct_io_size_##s(pdata);
+		length = sio_size_##s(pdata);
 #include "packet.def.h"
 #undef  PACKET_STRUCT
 
@@ -93,7 +93,7 @@ int get_packet_data(struct packet *p)
 
 #define PACKET_STRUCT(name, id, s)                                      \
 	if (p->header.type == id)                                       \
-		return struct_io_frombuf_##s(p->pdata, p->ndata);
+		return sio_frombuf_##s(p->pdata, p->ndata);
 #include "packet.def.h"
 #undef  PACKET_STRUCT
 
@@ -110,7 +110,7 @@ void free_packet_data(struct packet *p)
 
 #define PACKET_STRUCT(name, id, s)                                      \
 	if (p->header.type == id)                                       \
-		struct_io_free_##s(p->pdata);
+		sio_free_##s(p->pdata);
 #include "packet.def.h"
 #undef  PACKET_STRUCT
 }

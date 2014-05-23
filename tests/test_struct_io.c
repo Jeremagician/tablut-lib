@@ -8,10 +8,10 @@
 #include "struct_io.func.h"
 
 
-static inline void random_init(struct struct_io_test *s)
+static inline void random_init(struct sio_test *s)
 {
 	static uint8_t dyn8[2];
-	static struct substruct_io_test dyns[2];
+	static struct sio_subtest dyns[2];
 
 	dyn8[0] = random();
 	dyn8[1] = random();
@@ -57,8 +57,8 @@ static int compare_field(const char *name,
 	                   sizeof(*target->field) * (size_t)size))	\
 		return 0;
 
-static int compare(struct struct_io_test *original,
-                   struct struct_io_test *test)
+static int compare(struct sio_test *original,
+                   struct sio_test *test)
 {
 	return_on_different(f8, original, test);
 	return_on_different(f16, original, test);
@@ -78,7 +78,7 @@ static int compare(struct struct_io_test *original,
 
 int main(void)
 {
-	struct struct_io_test original, test = {0};
+	struct sio_test original, test = {0};
 	char template[] = TMP_TEMPLATE;
 	int tmp;
 
@@ -91,9 +91,9 @@ int main(void)
 
 	srandom(time(NULL));
 	random_init(&original);
-	fail_on_false(struct_io_write_struct_io_test(&original, tmp));
+	fail_on_false(sio_write_sio_test(&original, tmp));
 	lseek(tmp, 0, SEEK_SET);
-	fail_on_false(struct_io_read_struct_io_test(&test, tmp));
+	fail_on_false(sio_read_sio_test(&test, tmp));
 	fail_on_false(compare(&original, &test));
 
 	close(tmp);
