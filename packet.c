@@ -6,7 +6,7 @@
 
 static void assert_packet_type(enum packet_type type)
 {
-#ifdef DEBUG
+#ifndef NDEBUG
 	assert(type >= 0 && type < 1 << (((struct packet_header*)0)->type * 8));
 
 #define PACKET_STRUCT(name, id, s)                                      \
@@ -93,7 +93,7 @@ int get_packet_data(struct packet *p)
 
 #define PACKET_STRUCT(name, id, s)                                      \
 	if (p->header.type == id)                                       \
-		return struct_io_frombuf_##s(p->pdata, p->ndata), 1;
+		return struct_io_frombuf_##s(p->pdata, p->ndata);
 #include "packet.def.h"
 #undef  PACKET_STRUCT
 
