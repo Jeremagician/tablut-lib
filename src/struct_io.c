@@ -73,6 +73,10 @@ static int adapt_dynfield(void **field, int *len, size_t fsize, int wlen)
 }
 
 
+/*
+ * sio_frombuf_*()
+ */
+
 #define popbufval(dest, buf, type, conv) do {                           \
 	dest = conv(*(type*)buf);                                       \
 	buf += sizeof(type);                                            \
@@ -128,6 +132,10 @@ static int adapt_dynfield(void **field, int *len, size_t fsize, int wlen)
 #undef  END
 
 
+/*
+ * sio_tobuf_*()
+ */
+
 #define putbufval(buf, val, type, conv) do {                            \
 	*(type*)buf = conv(val);                                        \
 	buf += sizeof(type);                                            \
@@ -180,30 +188,13 @@ static int readfull(int fildes, void *buf, size_t nbyte)
 {
 	ssize_t ret = 0;
 	size_t n = 0;
+
 	while (ret >= 0 && n < nbyte) {
 		ret = read(fildes, (char*)buf + n, nbyte - n);
 		n += ret;
 	}
-	if (ret == -1)
-		fprintf(stderr, "Reading %i bytes: %s\n", (int)nbyte, strerror(errno));
+
 	return ret >= 0;
-}
-
-
-static int alloc_and_readfull(int fildes, void **buf, size_t size)
-{
-	void *tmp = malloc(size);
-	if (!tmp) {
-		fprintf(stderr, "Can't allocate dynamic field: %s\n",
-		        strerror(errno));
-		return 0;
-	}
-	if (!readfull(fildes, tmp, size)) {
-		free(tmp);
-		return 0;
-	}
-	*buf = tmp;
-	return 1;
 }
 
 
@@ -211,39 +202,65 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 {
 	ssize_t ret = 0;
 	size_t n = 0;
+
 	while (ret >= 0 && n < nbyte) {
 		ret = write(fildes, (char*)buf + n, nbyte - n);
 		n += ret;
 	}
-	if (ret == -1)
-		fprintf(stderr, "Writing %i bytes: %s\n", (int)nbyte, strerror(errno));
+
 	return ret >= 0;
 }
+
+
+/*
+ * sio_read_*()
+ */
+
+#define readval(dest, fd, conv) do {                                    \
+	if (!readfull(fd, &dest, sizeof(dest)))                         \
+		return 0;                                               \
+	dest = conv(dest);                                              \
+} while (0)
+
+#define readstruct(dest, stname, fd) do {                               \
+	if (!sio_read_##stname(&dest, fd))                              \
+		return 0;                                               \
+} while (0)
+
+#define readdynval(s, field, flen, fd, conv) do { int i;                \
+	if (!adapt_dynfield((void**)&s.field, &dynflen(s, field),       \
+	                    sizeof(*s.field), flen(&s)))                \
+		return 0;                                               \
+	if (!readfull(fd, s.field, dynflen(s, field) * sizeof(*s.field))) \
+		return 0;                                               \
+	for (i = 0; i < dynflen(s, field); i++)                         \
+		s.field[i] = conv(s.field[i]);                          \
+} while (0)
+
+#define readdynstruct(s, field, stname, flen, fd) do { int i;           \
+	if (!adapt_dynfield((void**)&s.field, &dynflen(s, field),       \
+	                    sizeof(*s.field), flen(&s)))                \
+		return 0;                                               \
+	for (i = 0; i < dynflen(s, field); i++)                         \
+		readstruct(s.field[i], stname, fd);                     \
+} while (0)
 
 
 #define BEGIN(name)                                                     \
 	int sio_read_##name(struct name *s, int fd)                     \
 	{                                                               \
-		int i;                                                  \
-		(void)i;
-#define FIELD(name, func)                                               \
-		if (!readfull(fd, &s->name, sizeof(s->name)))           \
-			return 0;                                       \
-		s->name = func(s->name);
-#define FIELD_8(name)  FIELD(name, ntohc)
-#define FIELD_16(name) FIELD(name, ntohs)
+
+#define FIELD_8(name)                                                   \
+		readval(s->name, fd, ntohc);
+#define FIELD_16(name)                                                  \
+		readval(s->name, fd, ntohs);
 #define FIELD_STRUCT(name, st)                                          \
-		if (!sio_read_##st(&s->name, fd))                       \
-			return 0;
+		readstruct(s->name, st, fd);
 #define FIELD_DYN_8(name, func)                                         \
-		if (!alloc_and_readfull(fd, (void**)&s->name, func(s))) \
-			return 0;
+		readdynval((*s), name, func, fd, ntohc);
 #define FIELD_DYN_STRUCT(name, st, func)                                \
-		if (!(s->name = malloc(func(s) * sizeof(struct st))))   \
-			return 0;                                       \
-		for (i = 0; i < func(s); i++)                           \
-			if (!sio_read_##st(&s->name[i], fd))            \
-				return 0;
+		readdynstruct((*s), name, st, func, fd);
+
 #define END()                                                           \
 		return 1;                                               \
 	}
