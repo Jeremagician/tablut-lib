@@ -8,6 +8,20 @@
 #include "struct_io.h"
 #include "struct_io.func.h"
 
+/*
+ * Pedantic isn't very adapted for code generation:
+ *   - Because some part of code may or may not be included, some elements will
+ *     be tagged as 'unused'.  To avoid that we must used them for nothing,
+ *     whenever they will effectively be used or not.
+ *   - Code generation make extensive use of macros, and variadic macro.
+ *     Pedantic dislike empty macro argument, we have to workaround that by
+ *     defining an empty symbol.
+ *
+ * Code generation with macro make the code less readable and less harder to
+ * work on it.  However it is a neat trick and I'm sure it fit in this case
+ * very well because structure IO is very redondant.
+ */
+
 
 #define BEGIN(name)                                                     \
 	size_t sio_size_##name(struct name *s)                          \
@@ -53,10 +67,10 @@ static int adapt_buffer(void **buf, size_t len)
 	int sio_frombuf_##name(struct name *sp, char *buf)              \
 	{                                                               \
 		size_t offset = 0;                                      \
-		int i; (void)i;                                         \
 		void (*const free_s)(struct name*) =                    \
 		      sio_free_##name;                                  \
-		struct name s = { 0 };
+		struct name s = name##_ZERO;                            \
+		int i; (void)i;
 #define FIELD_8(name)                                                   \
 		s.name = ((uint8_t*)buf)[offset];                       \
 		offset += sizeof(s.name);
@@ -84,6 +98,7 @@ static int adapt_buffer(void **buf, size_t len)
 #define END()                                                           \
 		*sp = s;                                                \
 		return 1;                                               \
+		goto fail;                                              \
 	fail:                                                           \
 		free_s(&s);                                             \
 		return 0;                                               \

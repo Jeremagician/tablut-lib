@@ -10,8 +10,8 @@
 
 static inline void random_init(struct sio_test *s)
 {
-	static uint8_t dyn8[2];
-	static struct sio_subtest dyns[2];
+	uint8_t dyn8[2];
+	struct sio_subtest dyns[2];
 
 	dyn8[0] = random();
 	dyn8[1] = random();
@@ -78,7 +78,7 @@ static int compare(struct sio_test *original,
 
 int main(void)
 {
-	struct sio_test original, test = {0};
+	struct sio_test original, test = sio_test_ZERO;
 	char template[] = TMP_TEMPLATE;
 	int tmp;
 

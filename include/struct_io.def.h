@@ -19,8 +19,6 @@ BEGIN(packet_header)
 	FIELD_16(length)
 END()
 
-#ifndef TEST
-
 BEGIN(vec2)
 	FIELD_16(x)
 	FIELD_16(y)
@@ -73,7 +71,7 @@ BEGIN(game_state)
 	FIELD_DYN_STRUCT(moves, move, get_move_count)
 END()
 
-#else
+#ifdef TEST
 
 BEGIN(sio_subtest)
 	FIELD_8(nothing)

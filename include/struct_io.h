@@ -7,7 +7,7 @@
 
 
 /*
- * Structure
+ * Structure and his zero-initializer.
  */
 #define BEGIN(name)                                                     \
 	struct name {
@@ -34,6 +34,9 @@
 
 
 /*
+ * Initializer to zero.  Portable application should only use this to initiaze
+ * the structure to zero.
+ *
  * Read a structure from a file, write a structure to a file.
  * Return 0 on failure (with errno set), 1 on success.
  *
@@ -48,8 +51,12 @@
  * where keep somewhere else.
  *
  * Compute the (packed) size of the given structure.
+ *
+ * Free the given structure.
  */
 #define BEGIN(name)                                                     \
+	static const struct name name##_ZERO;                           \
+                                                                        \
 	int sio_read_##name(struct name *s, int fd);                    \
 	int sio_write_##name(struct name *s, int fd);                   \
 	int sio_frombuf_##name(struct name *s, char *buf);              \

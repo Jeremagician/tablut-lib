@@ -25,8 +25,8 @@ static int test_fill(void)
 
 	length = sio_size_sio_subtest(&test);
 	if (p.header.length != length) {
-		fprintf(stderr, "Packet length should be %zi instead of %zi.\n",
-		        length, p.header.length);
+		fprintf(stderr, "Packet length should be %lu instead of %lu.\n",
+		        (unsigned long)length, (unsigned long)p.header.length);
 		ret = 0;
 	}
 
@@ -57,8 +57,9 @@ static int test_packet_data(void)
 	}
 
 	if (p.pdata_len != sizeof(test)) {
-		fprintf(stderr, "Wrong packet data %zi, expected %zi\n",
-		        p.pdata_len, sizeof(test));
+		fprintf(stderr, "Wrong packet data %lu, expected %lu\n",
+		        (unsigned long)p.pdata_len,
+		        (unsigned long)sizeof(test));
 		return 0;
 	}
 
