@@ -8,9 +8,10 @@
  * comes from the network.  'Packet data' is the network data converted to a
  * structure, wich can be easily manipulated by the user application.
  *
- * This module only provides heper function to manipulate a packet.  It does
+ * This module only provides helper functions to manipulate a packet.  It does
  * not aim to handle packet IO, because the user application may have his own
- * way to do it.
+ * way to do it.  The user application can of course reuse packet.def.h to
+ * generate some functions for IO which fit his needs.
  */
 
 #include "struct_io.h"
@@ -47,7 +48,7 @@ enum packet_type {
  * wanted paramters, and then refused them if it get above this.
  */
 #define PACKET_MAX_NDATA_LENGTH                                         \
-	(1 << (sizeof ((struct packet_header*)0)->type * 8))
+	(1 << (sizeof((struct packet_header*)0)->type * 8))
 
 /*
  * Fill the packet header according to the packet data inside it.
