@@ -9,24 +9,24 @@
 #include "struct_io.func.h"
 
 
-#define BEGIN(name)							\
-	size_t struct_io_size_##name(struct name *s)			\
-	{								\
-		size_t size = 0; int i;					\
+#define BEGIN(name)                                                     \
+	size_t struct_io_size_##name(struct name *s)                    \
+	{                                                               \
+		size_t size = 0; int i;                                 \
 		(void)i;
-#define FIELD_8(name)							\
+#define FIELD_8(name)                                                   \
 		size += sizeof(s->name);
-#define FIELD_16(name)							\
+#define FIELD_16(name)                                                  \
 		size += sizeof(s->name);
-#define FIELD_STRUCT(name, st)						\
+#define FIELD_STRUCT(name, st)                                          \
 		size += struct_io_size_##st(&s->name);
-#define FIELD_DYN_8(name, func)						\
+#define FIELD_DYN_8(name, func)                                         \
 		size += func(s);
-#define FIELD_DYN_STRUCT(name, st, func)				\
-		for (i = 0; i < func(s); i++)				\
+#define FIELD_DYN_STRUCT(name, st, func)                                \
+		for (i = 0; i < func(s); i++)                           \
 			size += struct_io_size_##st(&s->name[i]);
-#define END()								\
-		return size;						\
+#define END()                                                           \
+		return size;                                            \
 	}
 #include "struct_io.def.h"
 #undef  BEGIN
@@ -38,33 +38,55 @@
 #undef  END
 
 
-#define BEGIN(name)							\
-	void struct_io_frombuf_##name(struct name *s, char *buf)	\
-	{								\
-		size_t offset = 0;					\
-		int i; (void)i;
-#define FIELD_8(name)							\
-		s->name = ((uint8_t*)buf)[offset];			\
-		offset += sizeof(s->name);
-#define FIELD_16(name)							\
-		s->name = ((uint16_t*)buf)[offset];			\
-		offset += sizeof(s->name);
-#define FIELD_STRUCT(name, st)						\
-		struct_io_frombuf_##st(&s->name, &buf[offset]);		\
-		offset += struct_io_size_##st(&s->name);
-#define FIELD_DYN_8(name, func)						\
-		s->name = malloc(func(s));				\
-		for (i = 0; i < func(s); i++) {				\
-			s->name[i] = ((uint8_t*)buf)[offset];		\
-			offset += sizeof(*s->name);			\
+static int adapt_buffer(void **buf, size_t len)
+{
+	void *tmp;
+	tmp = malloc(len);
+	if (!tmp)
+		return 0;
+	*buf = tmp;
+	return 1;
+}
+
+
+#define BEGIN(name)                                                     \
+	int struct_io_frombuf_##name(struct name *sp, char *buf)        \
+	{                                                               \
+		size_t offset = 0;                                      \
+		int i; (void)i;                                         \
+		void (*const free_s)(struct name*) =                    \
+		      struct_io_free_##name;                            \
+		struct name s = { 0 };
+#define FIELD_8(name)                                                   \
+		s.name = ((uint8_t*)buf)[offset];                       \
+		offset += sizeof(s.name);
+#define FIELD_16(name)                                                  \
+		s.name = ((uint16_t*)buf)[offset];                      \
+		offset += sizeof(s.name);
+#define FIELD_STRUCT(name, st)                                          \
+		s.name = sp->name;                                      \
+		struct_io_frombuf_##st(&s.name, &buf[offset]);          \
+		offset += struct_io_size_##st(&s.name);
+#define FIELD_DYN_8(name, func)                                         \
+		if (!adapt_buffer((void**)&s.name, func(&s)))           \
+			goto fail;                                      \
+		for (i = 0; i < func(&s); i++) {                        \
+			s.name[i] = ((uint8_t*)buf)[offset];            \
+			offset += sizeof(*s.name);                      \
 		}
-#define FIELD_DYN_STRUCT(name, st, func)				\
-		s->name = malloc(func(s) * sizeof(struct st));		\
-		for (i = 0; i < func(s); i++) {				\
-			struct_io_frombuf_##st(&s->name[i], &buf[offset]); \
-			offset += struct_io_size_##st(&s->name[i]);	\
+#define FIELD_DYN_STRUCT(name, st, func)                                \
+		if (!adapt_buffer((void**)&s.name, func(&s) * sizeof(struct st))) \
+			goto fail;                                      \
+		for (i = 0; i < func(&s); i++) {                        \
+			struct_io_frombuf_##st(&s.name[i], &buf[offset]); \
+			offset += struct_io_size_##st(&s.name[i]);      \
 		}
-#define END()								\
+#define END()                                                           \
+		*sp = s;                                                \
+		return 1;                                               \
+	fail:                                                           \
+		free_s(&s);                                             \
+		return 0;                                               \
 	}
 #include "struct_io.def.h"
 #undef  BEGIN
@@ -76,31 +98,31 @@
 #undef  END
 
 
-#define BEGIN(name)							\
-	void struct_io_tobuf_##name(struct name *s, char *buf)		\
-	{								\
-		size_t offset = 0;					\
+#define BEGIN(name)                                                     \
+	void struct_io_tobuf_##name(struct name *s, char *buf)          \
+	{                                                               \
+		size_t offset = 0;                                      \
 		int i; (void)i;
-#define FIELD_8(name)							\
-		buf[offset] = s->name;					\
+#define FIELD_8(name)                                                   \
+		buf[offset] = s->name;                                  \
 		offset += sizeof(s->name);
-#define FIELD_16(name)							\
-		buf[offset] = s->name;					\
+#define FIELD_16(name)                                                  \
+		buf[offset] = s->name;                                  \
 		offset += sizeof(s->name);
-#define FIELD_STRUCT(name, st)						\
-		struct_io_tobuf_##st(&s->name, &buf[offset]);		\
+#define FIELD_STRUCT(name, st)                                          \
+		struct_io_tobuf_##st(&s->name, &buf[offset]);           \
 		offset += struct_io_size_##st(&s->name);
-#define FIELD_DYN_8(name, func)						\
-		for (i = 0; i < func(s); i++) {				\
-			buf[offset] = s->name[i];			\
-			offset += sizeof(*s->name);			\
+#define FIELD_DYN_8(name, func)                                         \
+		for (i = 0; i < func(s); i++) {                         \
+			buf[offset] = s->name[i];                       \
+			offset += sizeof(*s->name);                     \
 		}
-#define FIELD_DYN_STRUCT(name, st, func)				\
-		for (i = 0; i < func(s); i++) {				\
+#define FIELD_DYN_STRUCT(name, st, func)                                \
+		for (i = 0; i < func(s); i++) {                         \
 			struct_io_tobuf_##st(&s->name[i], &buf[offset]); \
-			offset += struct_io_size_##st(&s->name[i]);	\
+			offset += struct_io_size_##st(&s->name[i]);     \
 		}
-#define END()								\
+#define END()                                                           \
 	}
 #include "struct_io.def.h"
 #undef  BEGIN
@@ -160,31 +182,31 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 /* pedantic disallow empty macros argument, here it is :P */
 #define EMPTY
 
-#define BEGIN(name)							\
-	int struct_io_read_##name(struct name *s, int fd)		\
-	{								\
-		int i;							\
+#define BEGIN(name)                                                     \
+	int struct_io_read_##name(struct name *s, int fd)               \
+	{                                                               \
+		int i;                                                  \
 		(void)i;
-#define FIELD(name, func)						\
-		if (!readfull(fd, &s->name, sizeof(s->name)))		\
-			return 0;					\
+#define FIELD(name, func)                                               \
+		if (!readfull(fd, &s->name, sizeof(s->name)))           \
+			return 0;                                       \
 		s->name = func(s->name);
 #define FIELD_8(name)  FIELD(name, EMPTY)
 #define FIELD_16(name) FIELD(name, ntohs)
-#define FIELD_STRUCT(name, st)						\
-		if (!struct_io_read_##st(&s->name, fd))			\
+#define FIELD_STRUCT(name, st)                                          \
+		if (!struct_io_read_##st(&s->name, fd))                 \
 			return 0;
-#define FIELD_DYN_8(name, func)						\
-		if (!alloc_and_readfull(fd, (void**)&s->name, func(s)))	\
+#define FIELD_DYN_8(name, func)                                         \
+		if (!alloc_and_readfull(fd, (void**)&s->name, func(s))) \
 			return 0;
-#define FIELD_DYN_STRUCT(name, st, func)				\
-		if (!(s->name = malloc(func(s) * sizeof(struct st))))	\
-			return 0;					\
-		for (i = 0; i < func(s); i++)				\
-			if (!struct_io_read_##st(&s->name[i], fd))	\
+#define FIELD_DYN_STRUCT(name, st, func)                                \
+		if (!(s->name = malloc(func(s) * sizeof(struct st))))   \
+			return 0;                                       \
+		for (i = 0; i < func(s); i++)                           \
+			if (!struct_io_read_##st(&s->name[i], fd))      \
 				return 0;
-#define END()								\
-		return 1;						\
+#define END()                                                           \
+		return 1;                                               \
 	}
 #include "struct_io.def.h"
 #undef  BEGIN
@@ -197,30 +219,30 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 #undef  END
 
 
-#define BEGIN(name)							\
-	int struct_io_write_##name(struct name *s, int fd)		\
-	{								\
-		uint32_t _tmp__;					\
-		int i;							\
+#define BEGIN(name)                                                     \
+	int struct_io_write_##name(struct name *s, int fd)              \
+	{                                                               \
+		uint32_t _tmp__;                                        \
+		int i;                                                  \
 		(void)_tmp__; (void)i;
-#define FIELD(name, type, func)						\
-		_tmp__ = func(s->name);					\
-		if (!writefull(fd, &_tmp__, sizeof(s->name)))		\
+#define FIELD(name, type, func)                                         \
+		_tmp__ = func(s->name);                                 \
+		if (!writefull(fd, &_tmp__, sizeof(s->name)))           \
 			return 0;
 #define FIELD_8(name)  FIELD(name, uint8_t, EMPTY)
 #define FIELD_16(name) FIELD(name, uint16_t, htons)
-#define FIELD_STRUCT(name, st)						\
-		if (!struct_io_write_##st(&s->name, fd))		\
+#define FIELD_STRUCT(name, st)                                          \
+		if (!struct_io_write_##st(&s->name, fd))                \
 			return 0;
-#define FIELD_DYN_8(name, func)						\
-		if (!writefull(fd, s->name, func(s)))			\
+#define FIELD_DYN_8(name, func)                                         \
+		if (!writefull(fd, s->name, func(s)))                   \
 			return 0;
-#define FIELD_DYN_STRUCT(name, st, func)				\
-		for (i = 0; i < func(s); i++)				\
-			if (!struct_io_write_##st(&s->name[i], fd))	\
+#define FIELD_DYN_STRUCT(name, st, func)                                \
+		for (i = 0; i < func(s); i++)                           \
+			if (!struct_io_write_##st(&s->name[i], fd))     \
 				return 0;
-#define END()								\
-		return 1;						\
+#define END()                                                           \
+		return 1;                                               \
 	}
 #include "struct_io.def.h"
 #undef  BEGIN
@@ -236,24 +258,24 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 /*
  * Freeing won't work if a size of a dynamic field depends of another dynamic
  * field.  We must first store the size somewhere and then retrieve them when
- * needed.
+ * needed.  I don't see rigth now a nice way of doing it.
  */
-#define BEGIN(name)							\
-	void struct_io_free_##name(struct name *s)			\
-	{								\
-		int i;							\
+#define BEGIN(name)                                                     \
+	void struct_io_free_##name(struct name *s)                      \
+	{                                                               \
+		int i;                                                  \
 		(void)s; (void)i;
 #define FIELD_8(name)
 #define FIELD_16(name)
-#define FIELD_STRUCT(name, st)						\
+#define FIELD_STRUCT(name, st)                                          \
 		struct_io_free_##st(&s->name);
-#define FIELD_DYN_8(name, func)						\
-		if (s->name)						\
+#define FIELD_DYN_8(name, func)                                         \
+		if (s->name)                                            \
 			free(s->name);
-#define FIELD_DYN_STRUCT(name, st, func)				\
-		for (i = 0; i < func(s); i++)				\
+#define FIELD_DYN_STRUCT(name, st, func)                                \
+		for (i = 0; i < func(s); i++)                           \
 			struct_io_free_##st(&s->name[i]);
-#define END()								\
+#define END()                                                           \
 	}
 #include "struct_io.def.h"
 #undef  BEGIN

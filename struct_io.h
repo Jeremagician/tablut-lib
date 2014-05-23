@@ -9,19 +9,19 @@
 /*
  * Structure
  */
-#define BEGIN(name)							\
+#define BEGIN(name)                                                     \
 	struct name {
-#define FIELD_8(name)							\
+#define FIELD_8(name)                                                   \
 		uint8_t name;
-#define FIELD_16(name)							\
+#define FIELD_16(name)                                                  \
 		uint16_t name;
-#define FIELD_STRUCT(name, st)						\
+#define FIELD_STRUCT(name, st)                                          \
 		struct st name;
-#define FIELD_DYN_8(name, func)						\
+#define FIELD_DYN_8(name, func)                                         \
 		uint8_t *name;
-#define FIELD_DYN_STRUCT(name, st, func)				\
+#define FIELD_DYN_STRUCT(name, st, func)                                \
 		struct st *name;
-#define END()								\
+#define END()                                                           \
 	};
 #include "struct_io.def.h"
 #undef  BEGIN
@@ -40,14 +40,21 @@
  * Read or write the struct from or to a buffer.  Assume the buffer has the
  * correct size.
  *
+ * When reading the structure from a buffer or a file, you can put a structure
+ * filled with 0, or with a structure already passed to this functions and not
+ * already freed.  In the later, the allocated field (if any) can be reused.
+ * You can not have any expectation on what will be reused or not and
+ * application must considere old buffer as invalid, especially if reference
+ * where keep somewhere else.
+ *
  * Compute the (packed) size of the given structure.
  */
-#define BEGIN(name)							\
-	int struct_io_read_##name(struct name *s, int fd);		\
-	int struct_io_write_##name(struct name *s, int fd);		\
-	void struct_io_frombuf_##name(struct name *s, char *buf);	\
-	void struct_io_tobuf_##name(struct name *s, char *buf);		\
-	size_t struct_io_size_##name(struct name *s);			\
+#define BEGIN(name)                                                     \
+	int struct_io_read_##name(struct name *s, int fd);              \
+	int struct_io_write_##name(struct name *s, int fd);             \
+	int struct_io_frombuf_##name(struct name *s, char *buf);        \
+	void struct_io_tobuf_##name(struct name *s, char *buf);         \
+	size_t struct_io_size_##name(struct name *s);                   \
 	void struct_io_free_##name(struct name *s);
 #define FIELD_8(name)
 #define FIELD_16(name)
