@@ -266,7 +266,6 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 	}
 #include "struct_io.def.h"
 #undef  BEGIN
-#undef  FIELD
 #undef  FIELD_8
 #undef  FIELD_16
 #undef  FIELD_STRUCT
@@ -275,34 +274,53 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 #undef  END
 
 
+/*
+ * sio_write_*()
+ */
+
+#define writeval(val, fd, type, conv) do { type tmp;                    \
+	tmp = conv(val);                                                \
+	if (!writefull(fd, &tmp, sizeof(type)))                         \
+		return 0;                                               \
+} while (0)
+
+#define writestruct(sval, stname, fd) do {                              \
+	if (!sio_write_##stname(&sval, fd))                             \
+		return 0;                                               \
+} while (0)
+
+/* Sadly, there are no optimisations possible for uint8_t with this genericity */
+#define writedynval(s, field, fd, type, conv) do { int i;               \
+	for (i = 0; i < dynflen(s, field); i++)                         \
+		writeval(s.field[i], fd, type, conv);                   \
+} while (0)
+
+#define writedynstruct(s, field, stname, fd) do { int i;                \
+	for (i = 0; i < dynflen(s, field); i++)                         \
+		writestruct(s.field[i], stname, fd);                    \
+} while (0)
+
+
 #define BEGIN(name)                                                     \
 	int sio_write_##name(struct name *s, int fd)                    \
-	{                                                               \
-		uint32_t _tmp__;                                        \
-		int i;                                                  \
-		(void)_tmp__; (void)i;
-#define FIELD(name, type, func)                                         \
-		_tmp__ = func(s->name);                                 \
-		if (!writefull(fd, &_tmp__, sizeof(s->name)))           \
-			return 0;
-#define FIELD_8(name)  FIELD(name, uint8_t, htonc)
-#define FIELD_16(name) FIELD(name, uint16_t, htons)
+	{
+
+#define FIELD_8(name)                                                   \
+		writeval(s->name, fd, uint8_t, htonc);
+#define FIELD_16(name)                                                  \
+		writeval(s->name, fd, uint16_t, htonc);
 #define FIELD_STRUCT(name, st)                                          \
-		if (!sio_write_##st(&s->name, fd))                      \
-			return 0;
+		writestruct(s->name, st, fd);
 #define FIELD_DYN_8(name, func)                                         \
-		if (!writefull(fd, s->name, func(s)))                   \
-			return 0;
+		writedynval((*s), name, fd, uint8_t, htonc);
 #define FIELD_DYN_STRUCT(name, st, func)                                \
-		for (i = 0; i < func(s); i++)                           \
-			if (!sio_write_##st(&s->name[i], fd))           \
-				return 0;
+		writedynstruct((*s), name, st, fd);
+
 #define END()                                                           \
 		return 1;                                               \
 	}
 #include "struct_io.def.h"
 #undef  BEGIN
-#undef  FIELD
 #undef  FIELD_8
 #undef  FIELD_16
 #undef  FIELD_STRUCT
