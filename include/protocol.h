@@ -37,7 +37,7 @@ enum player_type {
 enum message_type {
 	MESSAGE_TYPE_EVERYONE = 0,
 	MESSAGE_TYPE_TEAM = 1,
-	MESSAGE_TYPE_PRIVATE = 2,
+	MESSAGE_TYPE_PRIVATE = 2
 };
 
 enum move_type {
@@ -48,9 +48,10 @@ enum move_type {
 };
 
 enum quit_reason {
-	QUIT_REASON_UNKNOW = 0,
+	QUIT_REASON_UNKNOWN = 0,
 	QUIT_REASON_QUIT = 1,
 	QUIT_REASON_RAGEQUIT = 2,
+	QUIT_REASON_INTERNAL = 3
 };
 
 enum pawn_type {
