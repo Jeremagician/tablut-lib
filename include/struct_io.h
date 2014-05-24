@@ -3,13 +3,13 @@
 
 /*
  * Provide some functions to help reading/writing data to a file or a buffer.
- * Read or write using network byte order.
+ * It use network byte order and try to be efficient as possible.
  *
  * Reading or writing directly to a file suffer from some limitations due to
  * dynamic fields.  On error, the file is in invalid state and it can be fatal
  * for files like socket.  This is why reading or writing to a buffer is highly
- * recommended, even if it's needs a completly different way of programming, it
- * is often the *rigth* way of doing IO.
+ * recommended, even if it's needs a completly different way of programming.
+ * The buffer approache is often the rigth way of doing IO.
  *
  * Also, reading or writing directly to a file will be very slow compared to
  * reading or writing to a buffer.  So this functions are only there because
@@ -25,7 +25,7 @@
  * Structure generation.
  *
  * An extra field is added for dynamic entries, user application must not
- * access it or modify it unless they what they are doing.
+ * access it or modify it unless they know what they are doing.
  */
 #define BEGIN(name)                                                     \
 	struct name {
