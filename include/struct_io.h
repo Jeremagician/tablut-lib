@@ -62,24 +62,24 @@ static const struct name name##_ZERO;                                   \
  * Read the structure from the given file descriptor.
  *
  * The only accepted structure is a structure initialized to zero or a
- * structure aready passed to this functions or to sio_frombuf().  On the later
- * case, dynamic field can be invalidated, wich would make every pointer to
+ * structure already passed to this function or to sio_frombuf().  On the later
+ * case, dynamic fields can be invalidated, wich would make every pointer to
  * them invalid.
  *
  * The function block and terminate when the whole structure is read or when an
  * error occurs.
  *
  * On error, the structure contains undefined data.  But you can re-use it
- * on this function or sio_frombuf.  Even on error some buffers can remains
- * allocated and must be freed using sio_free.  Most of the time, the file will
- * be in a undefined state.
+ * on this function or sio_frombuf().  Even on error, some buffers can remains
+ * allocated and must be freed using sio_free().  Most of the time, the file
+ * will be in a undefined state.
  *
  * Return 1 on success or 0 on error, with errno set.
  */                                                                     \
 int sio_read_##name(struct name *s, int fd);                            \
                                                                         \
 /*
- * Write the structure to the given file descritor.
+ * Write the structure to the given file descriptor.
  *
  * The function block and terminate when the whole structure is write or when an
  * error occurs.
@@ -115,8 +115,8 @@ int sio_frombuf_##name(struct name *s, char *buf);                      \
 void sio_tobuf_##name(struct name *s, char *buf);                       \
                                                                         \
 /*
- * Retrieve the size structure, wich is here the size it will take when writed
- * to a file or a buffer.
+ * Retrieve the size of the structure, which is here the size it will take when
+ * writed to a file or a buffer.
  */                                                                     \
 size_t sio_size_##name(struct name *s);                                 \
                                                                         \
@@ -124,7 +124,7 @@ size_t sio_size_##name(struct name *s);                                 \
  * Free the given structure.
  *
  * Assume that every dynamic fields of the structure is valid and can be freed
- * using free().  Dynmic field set to NULL are ignored.
+ * using free().  Dynmic fields set to NULL are ignored.
  */                                                                     \
 void sio_free_##name(struct name *s);
 
