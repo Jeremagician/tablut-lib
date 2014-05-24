@@ -91,15 +91,15 @@ static int adapt_dynfield(void **field, int *len, size_t fsize, int wlen)
 	if (!adapt_dynfield((void**)&s.field, &dynflen(s, field),       \
 	                    sizeof(type), flen(&s)))                    \
 		return 0;                                               \
-	for (i = 0; i < dynflen(s, field); i++)                         \
+	for (i = 0; i < flen(&s); i++)                                  \
 		popbufval(s.field[i], buf, type, conv);                 \
 } while (0)
 
-#define popbufdynstruct(s, field, stname, fsize, buf) do { int i;       \
+#define popbufdynstruct(s, field, stname, flen, buf) do { int i;        \
 	if (!adapt_dynfield((void**)&s.field, &dynflen(s, field),       \
-	                    sizeof(*s.field), fsize(&s)))               \
+	                    sizeof(*s.field), flen(&s)))                \
 		return 0;                                               \
-	for (i = 0; i < dynflen(s, field); i++)                         \
+	for (i = 0; i < flen(&s); i++)                                  \
 		popbufstruct(s.field[i], stname, buf);                  \
 } while (0)
 
@@ -231,9 +231,9 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 	if (!adapt_dynfield((void**)&s.field, &dynflen(s, field),       \
 	                    sizeof(*s.field), flen(&s)))                \
 		return 0;                                               \
-	if (!readfull(fd, s.field, dynflen(s, field) * sizeof(*s.field))) \
+	if (!readfull(fd, s.field, flen(&s) * sizeof(*s.field)))        \
 		return 0;                                               \
-	for (i = 0; i < dynflen(s, field); i++)                         \
+	for (i = 0; i < flen(&s); i++)                                  \
 		s.field[i] = conv(s.field[i]);                          \
 } while (0)
 
@@ -241,7 +241,7 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 	if (!adapt_dynfield((void**)&s.field, &dynflen(s, field),       \
 	                    sizeof(*s.field), flen(&s)))                \
 		return 0;                                               \
-	for (i = 0; i < dynflen(s, field); i++)                         \
+	for (i = 0; i < flen(&s); i++)                                  \
 		readstruct(s.field[i], stname, fd);                     \
 } while (0)
 
@@ -308,7 +308,7 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 #define FIELD_8(name)                                                   \
 		writeval(s->name, fd, uint8_t, htonc);
 #define FIELD_16(name)                                                  \
-		writeval(s->name, fd, uint16_t, htonc);
+		writeval(s->name, fd, uint16_t, htons);
 #define FIELD_STRUCT(name, st)                                          \
 		writestruct(s->name, st, fd);
 #define FIELD_DYN_8(name, func)                                         \

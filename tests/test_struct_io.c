@@ -10,8 +10,8 @@
 
 static inline void random_init(struct sio_test *s)
 {
-	uint8_t dyn8[2];
-	struct sio_subtest dyns[2];
+	static uint8_t dyn8[2];
+	static struct sio_subtest dyns[2];
 
 	dyn8[0] = random();
 	dyn8[1] = random();
