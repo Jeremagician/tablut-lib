@@ -38,7 +38,12 @@ static int test_packet_data(void)
 {
 	struct packet p = PACKET_INIT;
 	struct sio_subtest test = { 210 };
-	char buf[sizeof(test)];
+
+	/*
+	 * No needs to allocate a buffer because there are no dynamic field in
+	 * sio_subtest.  Avoid a possibility of failure :)
+	 */
+	char buf[sizeof(struct sio_subtest)];
 
 	sio_tobuf_sio_subtest(&test, buf);
 
