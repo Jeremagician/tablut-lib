@@ -16,6 +16,6 @@ PACKET_STRUCT(MOVE, 4, move)
 
 #ifdef TEST
 
-PACKET_STRUCT(TEST, 1, sio_subtest)
+PACKET_STRUCT(TEST, 255, sio_subtest)
 
 #endif
