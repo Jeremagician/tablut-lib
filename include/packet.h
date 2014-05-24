@@ -24,7 +24,7 @@ struct packet {
 	size_t pdata_len;       /* Length in bytes of packet data */
 };
 
-static const struct packet PACKET_INIT = { {0, 0}, 0 };
+static const struct packet PACKET_INIT;
 
 /*
  * Packet type, used to fill the field 'type' of a packet header.

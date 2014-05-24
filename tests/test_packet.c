@@ -57,7 +57,7 @@ static int test_packet_data(void)
 	}
 
 	if (p.pdata_len != sizeof(test)) {
-		fprintf(stderr, "Wrong packet data %lu, expected %lu\n",
+		fprintf(stderr, "Wrong packet data length %lu, expected %lu\n",
 		        (unsigned long)p.pdata_len,
 		        (unsigned long)sizeof(test));
 		return 0;
