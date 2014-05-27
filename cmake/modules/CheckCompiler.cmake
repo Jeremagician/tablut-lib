@@ -1,5 +1,5 @@
-set(COMPILERS_DIR "${CMAKE_SOURCE_DIR}/cmake/compilers")
-set(WIN32_COMPATIBILITY_HEADER "${CMAKE_SOURCE_DIR}/src/common/windows.h")
+set(COMPILERS_DIR "${PROJECT_SOURCE_DIR}/cmake/compilers")
+set(WIN32_COMPATIBILITY_HEADER "${PROJECT_SOURCE_DIR}/src/common/windows.h")
 
 if(MSVC)
   include (${COMPILERS_DIR}/msvc.cmake)
