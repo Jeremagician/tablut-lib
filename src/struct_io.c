@@ -25,7 +25,7 @@ static inline uint8_t htonc(uint8_t c) { return c; }
 #define BEGIN(name)                                                     \
 	size_t sio_size_##name(struct name *s)                          \
 	{                                                               \
-		size_t size = 0; size_t i;                              \
+		size_t size = 0; unsigned i;                            \
 		(void)i;
 
 #define FIELD_8(name)                                                   \
@@ -35,7 +35,7 @@ static inline uint8_t htonc(uint8_t c) { return c; }
 #define FIELD_STRUCT(name, st)                                          \
 		size += sio_size_##st(&s->name);
 #define FIELD_DYN_8(name, func)                                         \
-		size += func(s);
+		size += func(s) * sizeof(*s->name);
 #define FIELD_DYN_STRUCT(name, st, func)                                \
 		for (i = 0; i < func(s); i++)                           \
 			size += sio_size_##st(&s->name[i]);
@@ -149,7 +149,7 @@ static int adapt_dynfield(void **field, int *len, size_t fsize, int wlen)
 #define putbufdynval(s, field, flen, buf, type, conv) do { unsigned i;  \
 	for (i = 0; i < flen(&s); i++)                                  \
 		putbufval(buf, s.field[i], type, conv);                 \
-} while (0)                                                             \
+} while (0)
 
 #define putbufdynstruct(s, field, stname, flen, buf) do { unsigned i;   \
 	for (i = 0; i < flen(&s); i++)                                  \
