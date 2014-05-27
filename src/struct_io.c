@@ -18,14 +18,14 @@
 /*
  * For coherence, functions to convert endianess of byte.
  */
-static inline const uint8_t ntohc(uint8_t c) { return c; }
-static inline const uint8_t htonc(uint8_t c) { return c; }
+static inline uint8_t ntohc(uint8_t c) { return c; }
+static inline uint8_t htonc(uint8_t c) { return c; }
 
 
 #define BEGIN(name)                                                     \
 	size_t sio_size_##name(struct name *s)                          \
 	{                                                               \
-		size_t size = 0; int i;                                 \
+		size_t size = 0; size_t i;                              \
 		(void)i;
 
 #define FIELD_8(name)                                                   \
@@ -87,7 +87,7 @@ static int adapt_dynfield(void **field, int *len, size_t fsize, int wlen)
 	buf += sio_size_##stname(&dest);                                \
 } while (0)
 
-#define popbufdynval(s, field, flen, buf, type, conv) do { int i;       \
+#define popbufdynval(s, field, flen, buf, type, conv) do { size_t i;    \
 	if (!adapt_dynfield((void**)&s.field, &dynflen(s, field),       \
 	                    sizeof(type), flen(&s)))                    \
 		return 0;                                               \
@@ -95,7 +95,7 @@ static int adapt_dynfield(void **field, int *len, size_t fsize, int wlen)
 		popbufval(s.field[i], buf, type, conv);                 \
 } while (0)
 
-#define popbufdynstruct(s, field, stname, flen, buf) do { int i;        \
+#define popbufdynstruct(s, field, stname, flen, buf) do { size_t i;     \
 	if (!adapt_dynfield((void**)&s.field, &dynflen(s, field),       \
 	                    sizeof(*s.field), flen(&s)))                \
 		return 0;                                               \
@@ -146,12 +146,12 @@ static int adapt_dynfield(void **field, int *len, size_t fsize, int wlen)
 	buf += sio_size_##stname(&sval);                                \
 } while (0)
 
-#define putbufdynval(s, field, flen, buf, type, conv) do { int i;       \
+#define putbufdynval(s, field, flen, buf, type, conv) do { unsigned i;  \
 	for (i = 0; i < flen(&s); i++)                                  \
 		putbufval(buf, s.field[i], type, conv);                 \
-} while (0)
+} while (0)                                                             \
 
-#define putbufdynstruct(s, field, stname, flen, buf) do { int i;        \
+#define putbufdynstruct(s, field, stname, flen, buf) do { unsigned i;   \
 	for (i = 0; i < flen(&s); i++)                                  \
 		putbufstruct(buf, s.field[i], stname);                  \
 } while (0)
@@ -227,7 +227,7 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 		return 0;                                               \
 } while (0)
 
-#define readdynval(s, field, flen, fd, conv) do { int i;                \
+#define readdynval(s, field, flen, fd, conv) do { unsigned i;           \
 	if (!adapt_dynfield((void**)&s.field, &dynflen(s, field),       \
 	                    sizeof(*s.field), flen(&s)))                \
 		return 0;                                               \
@@ -237,7 +237,7 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 		s.field[i] = conv(s.field[i]);                          \
 } while (0)
 
-#define readdynstruct(s, field, stname, flen, fd) do { int i;           \
+#define readdynstruct(s, field, stname, flen, fd) do { unsigned i;      \
 	if (!adapt_dynfield((void**)&s.field, &dynflen(s, field),       \
 	                    sizeof(*s.field), flen(&s)))                \
 		return 0;                                               \
@@ -290,12 +290,12 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 } while (0)
 
 /* Sadly, there are no optimisations possible for uint8_t with this genericity */
-#define writedynval(s, field, flen, fd, type, conv) do { int i;         \
+#define writedynval(s, field, flen, fd, type, conv) do { unsigned i;    \
 	for (i = 0; i < flen(&s); i++)                                  \
 		writeval(s.field[i], fd, type, conv);                   \
 } while (0)
 
-#define writedynstruct(s, field, stname, flen, fd) do { int i;          \
+#define writedynstruct(s, field, stname, flen, fd) do { unsigned i;     \
 	for (i = 0; i < flen(&s); i++)                                  \
 		writestruct(s.field[i], stname, fd);                    \
 } while (0)
@@ -337,7 +337,7 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 #define BEGIN(name)                                                     \
 	void sio_free_##name(struct name *s)                            \
 	{                                                               \
-		int i;                                                  \
+		unsigned i;                                             \
 		(void)s; (void)i;
 #define FIELD_8(name)
 #define FIELD_16(name)

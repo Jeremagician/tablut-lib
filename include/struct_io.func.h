@@ -3,16 +3,16 @@
 
 #include "struct_io.h"
 
-int get_name_length(struct hello *s);
-size_t get_piece_count(struct rules *s);
-size_t get_tile_count(struct rules *s);
-size_t get_lobby_player_count(struct lobby *s);
-size_t get_move_count(struct game_state *s);
+unsigned get_name_length(struct hello *s);
+unsigned get_piece_count(struct rules *s);
+unsigned get_tile_count(struct rules *s);
+unsigned get_lobby_player_count(struct lobby *s);
+unsigned get_move_count(struct game_state *s);
 
 #ifdef TEST
 
-size_t get_dyn8_size(struct sio_test *s);
-size_t get_dyns_size(struct sio_test *s);
+unsigned get_dyn8_size(struct sio_test *s);
+unsigned get_dyns_size(struct sio_test *s);
 
 #endif
 

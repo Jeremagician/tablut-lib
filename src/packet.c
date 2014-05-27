@@ -36,7 +36,7 @@ static size_t get_network_data_length(enum packet_type type, void *pdata)
 	 * the packet data.  But it will force the programmer to found a proper
 	 * way to limit the scope of what his application can do.
 	 */
-	assert(length >= 0 && length < PACKET_MAX_NDATA_LENGTH);
+	assert(length < PACKET_MAX_NDATA_LENGTH);
 	return length;
 }
 
