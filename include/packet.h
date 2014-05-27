@@ -16,10 +16,23 @@
 
 #include "struct_io.h"
 
+/*
+ * User can control network data and packet data in the following way.
+ *
+ * If data is NULL, the corespinding length must be NULL.  If the length is
+ * zero but data is valid, then it is assumed that the buffer don't belongs
+ * to the packet and is user controled, the buffer will also not be affacted
+ * by functions wich manipulate the packet.
+ *
+ * If data is valid and his size above zero, it is assumed that the data is
+ * controlled by the function who manipulate it and can be modify by them.
+ * Data will be free by calling free_packet().
+ */
 struct packet {
 	struct packet_header header;
 
 	void *ndata;            /* Network data */
+	size_t ndata_len;       /* Length in bytes of network data */
 	void *pdata;            /* Packet data */
 	size_t pdata_len;       /* Length in bytes of packet data */
 };
@@ -71,9 +84,28 @@ void fill_packet_header(struct packet *p, enum packet_type type);
 int get_packet_data(struct packet *p);
 
 /*
+ * Convert packet data inside the given packet into network data.  Use packet
+ * header to found the type of the packet data.
+ *
+ * Network data can be NULL, or already contains a buffer of size ndata_len.
+ * In both case, if the packet data don't fit in the given buffer (if any),
+ * his size is readjusted.
+ *
+ * Return 1 on success, 0 on failure with errno set to the corresponding error.
+ */
+int get_network_data(struct packet *p);
+
+/*
  * Free the packet data, note that is don't free the buffer itself but only the
- * data inside.  The packet data buffer still remains valid.
+ * data inside.  The packet data buffer still remains valid and untouched.
  */
 void free_packet_data(struct packet *p);
+
+/*
+ * Free data buffers in the packet, if they are not user controlled.  Reset the
+ * size if needed.  If packet data contains something, it will be freed using
+ * free_packet_data().
+ */
+void free_packet(struct packet *p);
 
 #endif /* PACKET_H_ */

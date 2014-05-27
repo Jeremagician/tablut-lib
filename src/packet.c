@@ -75,6 +75,9 @@ static int grow_buffer(void **buf, size_t size)
 }
 
 
+#define assert_valid_pdata(p)                                           \
+	assert(!((p)->pdata_len == 0 && (p)->pdata != NULL));
+
 int get_packet_data(struct packet *p)
 {
 	size_t length;
@@ -82,10 +85,11 @@ int get_packet_data(struct packet *p)
 	assert(p != NULL);
 	assert(p->ndata != NULL);
 	assert_packet_type(p->header.type);
+	assert_valid_pdata(p);
 
 	length = get_packet_data_length(p->header.type);
 
-	if (p->pdata == NULL || p->pdata_len < length) {
+	if (!p->pdata || (p->pdata_len > 0 && p->pdata_len < length)) {
 		if (!grow_buffer(&p->pdata, length))
 			return 0;
 		p->pdata_len = length;
@@ -102,15 +106,64 @@ int get_packet_data(struct packet *p)
 }
 
 
+#define assert_valid_ndata(p)                                           \
+	assert(!((p)->ndata_len == 0 && (p)->ndata != NULL));
+
+int get_network_data(struct packet *p)
+{
+	assert(p != NULL);
+	assert(p->pdata != NULL);
+	assert_packet_type(p->header.type);
+	assert_valid_ndata(p);
+
+	if (!p->ndata || (p->ndata_len > 0 && p->ndata_len < p->header.length)) {
+		if (!grow_buffer(&p->ndata, p->header.length))
+			return 0;
+		p->ndata_len = p->header.length;
+	}
+
+#define PACKET_STRUCT(name, id, s)                                      \
+	if (p->header.type == id)                                       \
+		return sio_tobuf_##s(p->pdata, p->ndata), 1;
+#include "packet.def.h"
+#undef  PACKET_STRUCT
+
+	/* Should never be reached */
+	return 0;
+}
+
+
 void free_packet_data(struct packet *p)
 {
 	assert(p != NULL);
 	assert(p->pdata != NULL);
 	assert_packet_type(p->header.type);
+	assert_valid_pdata(p);
 
 #define PACKET_STRUCT(name, id, s)                                      \
 	if (p->header.type == id)                                       \
 		sio_free_##s(p->pdata);
 #include "packet.def.h"
 #undef  PACKET_STRUCT
+}
+
+
+void free_packet(struct packet *p)
+{
+	assert(p != NULL);
+	assert(p->pdata != NULL);
+	assert_packet_type(p->header.type);
+	assert_valid_pdata(p);
+	assert_valid_ndata(p);
+
+	if (p->pdata && p->pdata_len > 0) {
+		free_packet_data(p);
+		free(p->pdata);
+		p->pdata_len = 0;
+	}
+
+	if (p->ndata && p->ndata_len > 0) {
+		free(p->ndata);
+		p->ndata_len = 0;
+	}
 }
