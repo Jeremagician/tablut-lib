@@ -1,7 +1,6 @@
 #include <assert.h>
 #include <stdio.h>
 #include "packet.h"
-#include "struct_io.h"
 
 
 static void assert_packet_type(enum packet_type type)

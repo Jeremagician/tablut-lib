@@ -4,8 +4,25 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
+
+
+#define SIO_INCLUDE "test_struct_io.sio.h"
 #include "struct_io.h"
-#include "struct_io.func.h"
+
+unsigned get_dyn8_size(struct sio_test *s)
+{
+	(void)s;
+	return 2;
+}
+
+unsigned get_dyns_size(struct sio_test *s)
+{
+	(void)s;
+	return 2;
+}
+
+#define SIO_INCLUDE "test_struct_io.sio.h"
+#include "struct_io.c"
 
 
 static inline void random_init(struct sio_test *s)

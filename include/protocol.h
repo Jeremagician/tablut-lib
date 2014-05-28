@@ -27,6 +27,8 @@ enum error_bad_move {
 /* 0 = Player, 1 = Bot */
 /* In case of bot the last 5 bit is his difficulty */
 
+#define PLAYER_NAME_LENGTH 32
+
 /* Bitfield */
 enum player_type {
 	PLAYER_TYPE_SPECTATOR = (1 << 0),
@@ -58,5 +60,19 @@ enum pawn_type {
 	PAWN_TYPE_SWEDISH = 2,
 	PAWN_TYPE_KING = 3
 };
+
+
+#define SIO_PROTOCOL "protocol.sio.h"
+#define SIO_INCLUDE SIO_PROTOCOL
+#include "struct_io.h"
+#undef  SIO_INCLUDE
+
+
+unsigned get_name_length(struct hello *s);
+unsigned get_piece_count(struct rules *s);
+unsigned get_tile_count(struct rules *s);
+unsigned get_lobby_player_count(struct lobby *s);
+unsigned get_move_count(struct game_state *s);
+
 
 #endif /* PROTOCOL_H_ */

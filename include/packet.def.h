@@ -13,9 +13,3 @@ PACKET_STRUCT(LOBBY, 2, lobby)
 PACKET_STRUCT(GAME_STATE, 3, game_state)
 
 PACKET_STRUCT(MOVE, 4, move)
-
-#ifdef TEST
-
-PACKET_STRUCT(TEST, 255, sio_subtest)
-
-#endif

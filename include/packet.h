@@ -14,7 +14,7 @@
  * generate some functions for IO which fit his needs.
  */
 
-#include "struct_io.h"
+#include "protocol.h"
 
 /*
  * User can control network data and packet data in the following way.

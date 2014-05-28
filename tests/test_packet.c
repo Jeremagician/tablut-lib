@@ -4,26 +4,25 @@
 #include <string.h>
 #include <errno.h>
 #include "packet.h"
-#include "struct_io.h"
 
 
 static int test_fill(void)
 {
 	struct packet p = PACKET_INIT;
-	struct sio_subtest test = { 121 };
+	struct error test = { 121 };
 	int ret = 1;
 	size_t length;
 
 	p.pdata = &test;
-	fill_packet_header(&p, PACKET_TEST);
+	fill_packet_header(&p, PACKET_ERROR);
 
-	if (p.header.type != PACKET_TEST) {
+	if (p.header.type != PACKET_ERROR) {
 		fprintf(stderr, "Packet type should be %i instead of %i.\n",
-		        PACKET_TEST, p.header.type);
+		        PACKET_ERROR, p.header.type);
 		ret = 0;
 	}
 
-	length = sio_size_sio_subtest(&test);
+	length = sio_size_error(&test);
 	if (p.header.length != length) {
 		fprintf(stderr, "Packet length should be %lu instead of %lu.\n",
 		        (unsigned long)length, (unsigned long)p.header.length);
@@ -37,18 +36,18 @@ static int test_fill(void)
 static int test_packet_data(void)
 {
 	struct packet p = PACKET_INIT;
-	struct sio_subtest test = { 210 };
+	struct error test = { 210 };
 
 	/*
 	 * No needs to allocate a buffer because there are no dynamic field in
 	 * sio_subtest.  Avoid a possibility of failure :)
 	 */
-	char buf[sizeof(struct sio_subtest)];
+	char buf[sizeof(struct error)];
 
-	sio_tobuf_sio_subtest(&test, buf);
+	sio_tobuf_error(&test, buf);
 
-	p.header.type = PACKET_TEST;
-	p.header.length = sio_size_sio_subtest(&test);
+	p.header.type = PACKET_ERROR;
+	p.header.length = sio_size_error(&test);
 	p.ndata = buf;
 
 	if (!get_packet_data(&p)) {

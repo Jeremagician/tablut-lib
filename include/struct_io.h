@@ -1,8 +1,9 @@
-#ifndef STRUCT_IO_H_
-#define STRUCT_IO_H_
+#ifndef SIO_INCLUDE
+#error "Undefined SIO_INCLUDE"
+#endif
 
 /*
- * Provide some functions to help reading/writing data to a file or a buffer.
+ * Generate some functions to help reading/writing data to a file or a buffer.
  * It use network byte order and try to be efficient as possible.
  *
  * Reading or writing directly to a file suffer from some limitations due to
@@ -41,7 +42,7 @@
 		struct st *name; int _##name##_len;
 #define END()                                                           \
 	};
-#include "struct_io.def.h"
+#include SIO_INCLUDE
 #undef  BEGIN
 #undef  FIELD_8
 #undef  FIELD_16
@@ -134,7 +135,7 @@ void sio_free_##name(struct name *s);
 #define FIELD_DYN_8(name, func)
 #define FIELD_DYN_STRUCT(name, s, func)
 #define END()
-#include "struct_io.def.h"
+#include SIO_INCLUDE
 #undef  BEGIN
 #undef  FIELD_8
 #undef  FIELD_16
@@ -144,4 +145,5 @@ void sio_free_##name(struct name *s);
 #undef  END
 
 
-#endif /* STRUCT_IO_H_ */
+/* Undef for sanity, applications should undef it too for coherence */
+#undef SIO_INCLUDE

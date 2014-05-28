@@ -15,5 +15,6 @@ endif(TESTS)
 
 add_subdirectory(src)
 if(TESTS)
+  include_directories(tests/)
   add_subdirectory(tests)
 endif(TESTS)

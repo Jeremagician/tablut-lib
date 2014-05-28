@@ -1,3 +1,8 @@
+#ifndef SIO_INCLUDE
+#error "Undefined SIO_INCLUDE"
+#endif
+
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -5,8 +10,6 @@
 #include <errno.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include "struct_io.h"
-#include "struct_io.func.h"
 
 /*
  * Code generation with macro make the code less readable and less harder to
@@ -43,7 +46,7 @@ static inline uint8_t htonc(uint8_t c) { return c; }
 #define END()                                                           \
 		return size;                                            \
 	}
-#include "struct_io.def.h"
+#include SIO_INCLUDE
 #undef  BEGIN
 #undef  FIELD_8
 #undef  FIELD_16
@@ -122,7 +125,7 @@ static int adapt_dynfield(void **field, int *len, size_t fsize, int wlen)
 #define END()                                                           \
 		return 1;                                               \
 	}
-#include "struct_io.def.h"
+#include SIO_INCLUDE
 #undef  BEGIN
 #undef  FIELD_8
 #undef  FIELD_16
@@ -174,7 +177,7 @@ static int adapt_dynfield(void **field, int *len, size_t fsize, int wlen)
 
 #define END()                                                           \
 	}
-#include "struct_io.def.h"
+#include SIO_INCLUDE
 #undef  BEGIN
 #undef  FIELD_8
 #undef  FIELD_16
@@ -264,7 +267,7 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 #define END()                                                           \
 		return 1;                                               \
 	}
-#include "struct_io.def.h"
+#include SIO_INCLUDE
 #undef  BEGIN
 #undef  FIELD_8
 #undef  FIELD_16
@@ -319,7 +322,7 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 #define END()                                                           \
 		return 1;                                               \
 	}
-#include "struct_io.def.h"
+#include SIO_INCLUDE
 #undef  BEGIN
 #undef  FIELD_8
 #undef  FIELD_16
@@ -351,7 +354,7 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 			sio_free_##st(&s->name[i]);
 #define END()                                                           \
 	}
-#include "struct_io.def.h"
+#include SIO_INCLUDE
 #undef  BEGIN
 #undef  FIELD_8
 #undef  FIELD_16
@@ -359,3 +362,7 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 #undef  FIELD_DYN_8
 #undef  FIELD_DYN_STRUCT
 #undef  END
+
+
+/* Undef for sanity, applications should undef it too for coherence */
+#undef SIO_INCLUDE

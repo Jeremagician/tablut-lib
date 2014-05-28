@@ -1,4 +1,10 @@
-#include "struct_io.func.h"
+#include "protocol.h"
+
+
+#define SIO_INCLUDE SIO_PROTOCOL
+#include "struct_io.c"
+#undef  SIO_INCLUDE
+
 
 unsigned get_name_length(struct hello *s)
 {
@@ -24,19 +30,3 @@ unsigned get_move_count(struct game_state *s)
 {
 	return s->move_count;
 }
-
-#ifdef TEST
-
-unsigned get_dyn8_size(struct sio_test *s)
-{
-	(void)s;
-	return 2;
-}
-
-unsigned get_dyns_size(struct sio_test *s)
-{
-	(void)s;
-	return 2;
-}
-
-#endif

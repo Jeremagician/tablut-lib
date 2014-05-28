@@ -1,8 +1,7 @@
 set(
   src_lib
   packet.c
-  struct_io.c
-  struct_io.func.c
+  protocol.c
   )
 
 add_library(tafl-lib STATIC ${src_lib})
