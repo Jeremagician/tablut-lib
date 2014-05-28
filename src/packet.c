@@ -6,7 +6,7 @@
 static void assert_packet_type(enum packet_type type)
 {
 #ifndef NDEBUG
-	assert(type >= 0 && type < 1 << (sizeof((struct packet_header*)0)->type * 8));
+	assert(type < 1 << (sizeof((struct packet_header*)0)->type * 8));
 
 #define PACKET_STRUCT(name, id, s)                                      \
 	if (type == id)                                                 \
