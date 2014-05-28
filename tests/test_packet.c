@@ -9,7 +9,7 @@
 static int test_fill(void)
 {
 	struct packet p = PACKET_INIT;
-	struct error test = { 121 };
+	struct error test = { 121, 0 };
 	int ret = 1;
 	size_t length;
 
@@ -36,7 +36,7 @@ static int test_fill(void)
 static int test_packet_data(void)
 {
 	struct packet p = PACKET_INIT;
-	struct error test = { 210 };
+	struct error test = { 210, 0 };
 
 	/*
 	 * No needs to allocate a buffer because there are no dynamic field in

@@ -6,12 +6,13 @@
 enum error_id
 {
 	ERROR_UNKNOWN        = 0,
-	ERROR_UNSUPPORTED    = 1, /* Operation not implemented */
-	ERROR_NOTIMPLEMENTED = 2, /* Unsupported protocol */
+	ERROR_UNSUPPORTED    = 1, /* Unsupported protocol */
+	ERROR_NOTIMPLEMENTED = 2, /* Operation not implemented */
 	ERROR_BAD_PACKET     = 3,
-	ERROR_PLAYER_FULL    = 4,
-	ERROR_SPECTATOR_FULL = 5,
-	ERROR_BAD_MOVE       = 6
+	ERROR_BAD_CONTENT    = 4,
+	ERROR_PLAYER_FULL    = 5,
+	ERROR_SPECTATOR_FULL = 6,
+	ERROR_BAD_MOVE       = 7
 };
 
 enum error_bad_move {
