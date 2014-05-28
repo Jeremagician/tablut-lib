@@ -22,11 +22,10 @@ enum error_bad_move {
 	ERROR_BAD_MOVE_BAD_OWNER               /* The pawn is not owned by the player */
 };
 
-enum lobby_team {
-	/* 00 = None, 01 = Muscovite, 10 = Swedish */
-	/* 0 = Player, 1 = Bot */
-	/* In case of bot the last 5 bit is his difficulty */
-};
+/* Lobby */
+/* 00 = None, 01 = Muscovite, 10 = Swedish */
+/* 0 = Player, 1 = Bot */
+/* In case of bot the last 5 bit is his difficulty */
 
 /* Bitfield */
 enum player_type {
