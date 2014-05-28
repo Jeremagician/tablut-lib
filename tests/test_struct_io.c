@@ -80,6 +80,7 @@ static int compare(struct sio_test *original,
 	return_on_different(f8, original, test);
 	return_on_different(f16, original, test);
 	return_on_different(fs.nothing, original, test);
+	return_on_different_dyn(farr8, original, test, 8);
 	return_on_different_dyn(fdyn8, original, test, get_dyn8_size(test));
 	return_on_different_dyn(fdyns, original, test, get_dyns_size(test));
 	return 1;
