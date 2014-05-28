@@ -22,8 +22,9 @@ enum error_bad_move {
 	ERROR_BAD_MOVE_CANT_BYPASS_PAWN,       /* Can't pass over another pawn */
 	ERROR_BAD_MOVE_CANT_BYPASS_FORTRESS,   /* Can't pass through a fortress */
 	ERROR_BAD_MOVE_BAD_COORDINATE_FROM,    /* Invalid 'from' coordinate */
-	ERROR_BAD_MOVE_CELL_NOT_FREE,          /* The destination tile is not free */
 	ERROR_BAD_MOVE_BAD_COORDINATE_TO,      /* Invalid 'to' coordinate */
+	ERROR_BAD_MOVE_SRC_FREE,               /* The source cell is free */
+	ERROR_BAD_MOVE_DEST_NOT_FREE,          /* The destination tile is not free */
 	ERROR_BAD_MOVE_BAD_OWNER               /* The pawn is not owned by the player */
 };
 
