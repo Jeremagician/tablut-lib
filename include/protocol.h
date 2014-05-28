@@ -7,7 +7,7 @@ enum error_id
 	ERROR_UNSUPPORTED = 1, 		/* Unsupported protocol */
 	ERROR_PLAYER_FULL = 2,
 	ERROR_SPECTATOR_FULL = 3,
-	ERROR_BAD_MOVE = 4,
+	ERROR_BAD_MOVE = 4
 };
 
 enum error_bad_move {
@@ -19,7 +19,7 @@ enum error_bad_move {
 	ERROR_BAD_MOVE_BAD_COORDINATE_FROM,    /* Invalid 'from' coordinate */
 	ERROR_BAD_MOVE_CELL_NOT_FREE,          /* The destination tile is not free */
 	ERROR_BAD_MOVE_BAD_COORDINATE_TO,      /* Invalid 'to' coordinate */
-	ERROR_BAD_MOVE_BAD_OWNER,              /* The pawn is not owned by the player */
+	ERROR_BAD_MOVE_BAD_OWNER               /* The pawn is not owned by the player */
 };
 
 enum lobby_team {
@@ -57,7 +57,7 @@ enum quit_reason {
 enum pawn_type {
 	PAWN_TYPE_MUSCOVITE = 1,
 	PAWN_TYPE_SWEDISH = 2,
-	PAWN_TYPE_KING = 3,
+	PAWN_TYPE_KING = 3
 };
 
 #endif /* PROTOCOL_H_ */
