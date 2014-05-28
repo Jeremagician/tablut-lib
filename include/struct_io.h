@@ -36,6 +36,8 @@
 		uint16_t name;
 #define FIELD_STRUCT(name, st)                                          \
 		struct st name;
+#define FIELD_ARR_8(name, len)                                          \
+		uint8_t name[len];
 #define FIELD_DYN_8(name, func)                                         \
 		uint8_t *name; int _##name##_len;
 #define FIELD_DYN_STRUCT(name, st, func)                                \
@@ -47,6 +49,7 @@
 #undef  FIELD_8
 #undef  FIELD_16
 #undef  FIELD_STRUCT
+#undef  FIELD_ARR_8
 #undef  FIELD_DYN_8
 #undef  FIELD_DYN_STRUCT
 #undef  END
@@ -132,6 +135,7 @@ void sio_free_##name(struct name *s);
 #define FIELD_8(name)
 #define FIELD_16(name)
 #define FIELD_STRUCT(name, s)
+#define FIELD_ARR_8(name, len)
 #define FIELD_DYN_8(name, func)
 #define FIELD_DYN_STRUCT(name, s, func)
 #define END()
@@ -140,6 +144,7 @@ void sio_free_##name(struct name *s);
 #undef  FIELD_8
 #undef  FIELD_16
 #undef  FIELD_STRUCT
+#undef  FIELD_ARR_8
 #undef  FIELD_DYN_8
 #undef  FIELD_DYN_STRUCT
 #undef  END

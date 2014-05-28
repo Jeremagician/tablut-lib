@@ -35,6 +35,8 @@ static inline uint8_t htonc(uint8_t c) { return c; }
 		size += sizeof(s->name);
 #define FIELD_16(name)                                                  \
 		size += sizeof(s->name);
+#define FIELD_ARR_8(name, len)                                          \
+		size += sizeof(s->name);
 #define FIELD_STRUCT(name, st)                                          \
 		size += sio_size_##st(&s->name);
 #define FIELD_DYN_8(name, func)                                         \
@@ -51,6 +53,7 @@ static inline uint8_t htonc(uint8_t c) { return c; }
 #undef  FIELD_8
 #undef  FIELD_16
 #undef  FIELD_STRUCT
+#undef  FIELD_ARR_8
 #undef  FIELD_DYN_8
 #undef  FIELD_DYN_STRUCT
 #undef  END
@@ -90,15 +93,19 @@ static int adapt_dynfield(void **field, int *len, size_t fsize, int wlen)
 	buf += sio_size_##stname(&dest);                                \
 } while (0)
 
-#define popbufdynval(s, field, flen, buf, type, conv) do { size_t i;    \
+#define popbufarrval(dest, len, buf, type, conv) do { unsigned i;       \
+	for (i = 0; i < len; i++)                                       \
+		popbufval(dest[i], buf, type, conv);                    \
+} while (0)
+
+#define popbufdynval(s, field, flen, buf, type, conv) do {              \
 	if (!adapt_dynfield((void**)&s.field, &dynflen(s, field),       \
 	                    sizeof(type), flen(&s)))                    \
 		return 0;                                               \
-	for (i = 0; i < flen(&s); i++)                                  \
-		popbufval(s.field[i], buf, type, conv);                 \
+	popbufarrval(s.field, flen(&s), buf, type, conv);               \
 } while (0)
 
-#define popbufdynstruct(s, field, stname, flen, buf) do { size_t i;     \
+#define popbufdynstruct(s, field, stname, flen, buf) do { unsigned i;   \
 	if (!adapt_dynfield((void**)&s.field, &dynflen(s, field),       \
 	                    sizeof(*s.field), flen(&s)))                \
 		return 0;                                               \
@@ -117,6 +124,8 @@ static int adapt_dynfield(void **field, int *len, size_t fsize, int wlen)
 		popbufval(s->name, buf, uint16_t, ntohs);
 #define FIELD_STRUCT(name, st)                                          \
 		popbufstruct(s->name, st, buf);
+#define FIELD_ARR_8(name, len)                                          \
+		popbufarrval(s->name, len, buf, uint8_t, ntohc);
 #define FIELD_DYN_8(name, func)                                         \
 		popbufdynval((*s), name, func, buf, uint8_t, ntohc);
 #define FIELD_DYN_STRUCT(name, st, func)                                \
@@ -130,6 +139,7 @@ static int adapt_dynfield(void **field, int *len, size_t fsize, int wlen)
 #undef  FIELD_8
 #undef  FIELD_16
 #undef  FIELD_STRUCT
+#undef  FIELD_ARR_8
 #undef  FIELD_DYN_8
 #undef  FIELD_DYN_STRUCT
 #undef  END
@@ -149,13 +159,13 @@ static int adapt_dynfield(void **field, int *len, size_t fsize, int wlen)
 	buf += sio_size_##stname(&sval);                                \
 } while (0)
 
-#define putbufdynval(s, field, flen, buf, type, conv) do { unsigned i;  \
-	for (i = 0; i < flen(&s); i++)                                  \
+#define putbufdynval(s, field, len, buf, type, conv) do { unsigned i;   \
+	for (i = 0; i < len; i++)                                       \
 		putbufval(buf, s.field[i], type, conv);                 \
 } while (0)
 
-#define putbufdynstruct(s, field, stname, flen, buf) do { unsigned i;   \
-	for (i = 0; i < flen(&s); i++)                                  \
+#define putbufdynstruct(s, field, stname, len, buf) do { unsigned i;    \
+	for (i = 0; i < len; i++)                                       \
 		putbufstruct(buf, s.field[i], stname);                  \
 } while (0)
 
@@ -170,10 +180,12 @@ static int adapt_dynfield(void **field, int *len, size_t fsize, int wlen)
 		putbufval(buf, s->name, uint16_t, htons);
 #define FIELD_STRUCT(name, st)                                          \
 		putbufstruct(buf, s->name, st);
+#define FIELD_ARR_8(name, len)                                          \
+		putbufdynval((*s), name, len, buf, uint8_t, htonc);
 #define FIELD_DYN_8(name, func)                                         \
-		putbufdynval((*s), name, func, buf, uint8_t, htonc);
+		putbufdynval((*s), name, func(s), buf, uint8_t, htonc);
 #define FIELD_DYN_STRUCT(name, st, func)                                \
-		putbufdynstruct((*s), name, st, func, buf);
+		putbufdynstruct((*s), name, st, func(s), buf);
 
 #define END()                                                           \
 	}
@@ -182,6 +194,7 @@ static int adapt_dynfield(void **field, int *len, size_t fsize, int wlen)
 #undef  FIELD_8
 #undef  FIELD_16
 #undef  FIELD_STRUCT
+#undef  FIELD_ARR_8
 #undef  FIELD_DYN_8
 #undef  FIELD_DYN_STRUCT
 #undef  END
@@ -230,21 +243,25 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 		return 0;                                               \
 } while (0)
 
-#define readdynval(s, field, flen, fd, conv) do { unsigned i;           \
-	if (!adapt_dynfield((void**)&s.field, &dynflen(s, field),       \
-	                    sizeof(*s.field), flen(&s)))                \
+#define readarrval(dest, len, fd, conv) do { unsigned i;                \
+	if (!readfull(fd, dest, len * sizeof(*dest)))                   \
 		return 0;                                               \
-	if (!readfull(fd, s.field, flen(&s) * sizeof(*s.field)))        \
-		return 0;                                               \
-	for (i = 0; i < flen(&s); i++)                                  \
-		s.field[i] = conv(s.field[i]);                          \
+	for (i = 0; i < len; i++)                                       \
+		dest[i] = conv(dest[i]);                                \
 } while (0)
 
-#define readdynstruct(s, field, stname, flen, fd) do { unsigned i;      \
+#define readdynval(s, field, len, fd, conv) do {                        \
 	if (!adapt_dynfield((void**)&s.field, &dynflen(s, field),       \
-	                    sizeof(*s.field), flen(&s)))                \
+	                    sizeof(*s.field), len))                     \
 		return 0;                                               \
-	for (i = 0; i < flen(&s); i++)                                  \
+	readarrval(s.field, len, fd, conv);                             \
+} while (0)
+
+#define readdynstruct(s, field, stname, len, fd) do { unsigned i;       \
+	if (!adapt_dynfield((void**)&s.field, &dynflen(s, field),       \
+	                    sizeof(*s.field), len))                     \
+		return 0;                                               \
+	for (i = 0; i < len; i++)                                       \
 		readstruct(s.field[i], stname, fd);                     \
 } while (0)
 
@@ -259,10 +276,12 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 		readval(s->name, fd, ntohs);
 #define FIELD_STRUCT(name, st)                                          \
 		readstruct(s->name, st, fd);
+#define FIELD_ARR_8(name, len)                                          \
+		readarrval(s->name, len, fd, ntohc);
 #define FIELD_DYN_8(name, func)                                         \
-		readdynval((*s), name, func, fd, ntohc);
+		readdynval((*s), name, func(s), fd, ntohc);
 #define FIELD_DYN_STRUCT(name, st, func)                                \
-		readdynstruct((*s), name, st, func, fd);
+		readdynstruct((*s), name, st, func(s), fd);
 
 #define END()                                                           \
 		return 1;                                               \
@@ -272,6 +291,7 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 #undef  FIELD_8
 #undef  FIELD_16
 #undef  FIELD_STRUCT
+#undef  FIELD_ARR_8
 #undef  FIELD_DYN_8
 #undef  FIELD_DYN_STRUCT
 #undef  END
@@ -293,13 +313,13 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 } while (0)
 
 /* Sadly, there are no optimisations possible for uint8_t with this genericity */
-#define writedynval(s, field, flen, fd, type, conv) do { unsigned i;    \
-	for (i = 0; i < flen(&s); i++)                                  \
+#define writedynval(s, field, len, fd, type, conv) do { unsigned i;     \
+	for (i = 0; i < len; i++)                                       \
 		writeval(s.field[i], fd, type, conv);                   \
 } while (0)
 
-#define writedynstruct(s, field, stname, flen, fd) do { unsigned i;     \
-	for (i = 0; i < flen(&s); i++)                                  \
+#define writedynstruct(s, field, stname, len, fd) do { unsigned i;      \
+	for (i = 0; i < len; i++)                                       \
 		writestruct(s.field[i], stname, fd);                    \
 } while (0)
 
@@ -314,10 +334,12 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 		writeval(s->name, fd, uint16_t, htons);
 #define FIELD_STRUCT(name, st)                                          \
 		writestruct(s->name, st, fd);
+#define FIELD_ARR_8(name, len)                                          \
+		writedynval((*s), name, len, fd, uint8_t, htonc);
 #define FIELD_DYN_8(name, func)                                         \
-		writedynval((*s), name, func, fd, uint8_t, htonc);
+		writedynval((*s), name, func(s), fd, uint8_t, htonc);
 #define FIELD_DYN_STRUCT(name, st, func)                                \
-		writedynstruct((*s), name, st, func, fd);
+		writedynstruct((*s), name, st, func(s), fd);
 
 #define END()                                                           \
 		return 1;                                               \
@@ -327,6 +349,7 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 #undef  FIELD_8
 #undef  FIELD_16
 #undef  FIELD_STRUCT
+#undef  FIELD_ARR_8
 #undef  FIELD_DYN_8
 #undef  FIELD_DYN_STRUCT
 #undef  END
@@ -346,6 +369,7 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 #define FIELD_16(name)
 #define FIELD_STRUCT(name, st)                                          \
 		sio_free_##st(&s->name);
+#define FIELD_ARR_8(name, len)
 #define FIELD_DYN_8(name, func)                                         \
 		if (s->name)                                            \
 			free(s->name);
@@ -359,6 +383,7 @@ static int writefull(int fildes, const void *buf, size_t nbyte)
 #undef  FIELD_8
 #undef  FIELD_16
 #undef  FIELD_STRUCT
+#undef  FIELD_ARR_8
 #undef  FIELD_DYN_8
 #undef  FIELD_DYN_STRUCT
 #undef  END
