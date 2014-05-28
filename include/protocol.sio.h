@@ -10,6 +10,7 @@ END()
 
 BEGIN(error)
 	FIELD_16(id)
+	FIELD_16(desc)
 END()
 
 BEGIN(hello)

@@ -1,13 +1,17 @@
 #ifndef PROTOCOL_H_
 #define PROTOCOL_H_
 
+#define PROTOCOL_VERSION 1
+
 enum error_id
 {
-	ERROR_UNKNOWN = 0,
-	ERROR_UNSUPPORTED = 1, 		/* Unsupported protocol */
-	ERROR_PLAYER_FULL = 2,
-	ERROR_SPECTATOR_FULL = 3,
-	ERROR_BAD_MOVE = 4
+	ERROR_UNKNOWN        = 0,
+	ERROR_UNSUPPORTED    = 1, /* Operation not implemented */
+	ERROR_NOTIMPLEMENTED = 2, /* Unsupported protocol */
+	ERROR_BAD_PACKET     = 3,
+	ERROR_PLAYER_FULL    = 4,
+	ERROR_SPECTATOR_FULL = 5,
+	ERROR_BAD_MOVE       = 6
 };
 
 enum error_bad_move {
@@ -30,9 +34,9 @@ enum error_bad_move {
 #define PLAYER_NAME_LENGTH 32
 
 /* Bitfield */
-enum player_type {
-	PLAYER_TYPE_SPECTATOR = (1 << 0),
-	PLAYER_TYPE_INFO      = (1 << 7) /* One-shot connection */
+enum player_info {
+	PLAYER_INFO_SPECTATOR = (1 << 0),
+	PLAYER_INFO_PROBE     = (1 << 7) /* One-shot connection */
 };
 
 enum message_type {
