@@ -68,7 +68,6 @@ enum pawn_type {
 #undef  SIO_INCLUDE
 
 
-unsigned get_name_length(struct hello *s);
 unsigned get_piece_count(struct rules *s);
 unsigned get_tile_count(struct rules *s);
 unsigned get_lobby_player_count(struct lobby *s);

@@ -6,11 +6,6 @@
 #undef  SIO_INCLUDE
 
 
-unsigned get_name_length(struct hello *s)
-{
-	return s->name_length;
-}
-
 unsigned get_piece_count(struct rules *s)
 {
 	return s->piece_count;
