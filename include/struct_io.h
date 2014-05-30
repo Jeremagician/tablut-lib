@@ -21,7 +21,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-
 /*
  * Structure generation.
  *
@@ -54,14 +53,22 @@
 #undef  FIELD_DYN_STRUCT
 #undef  END
 
+#ifdef __cplusplus
+#define DISABLE_FOR_CXX(x)
+extern "C" {
+#else
+#define DISABLE_FOR_CXX(x) x
+#endif // __cplusplus
 
 #define BEGIN(name)                                                     \
+DISABLE_FOR_CXX(                                                        \
 /*
  * Initializer to zero.  Portable application should only use this to
  * initialize the structure to zero.
  */                                                                     \
 static const struct name name##_ZERO;                                   \
                                                                         \
+)                                                                       \
 /*
  * Read the structure from the given file descriptor.
  *
@@ -132,6 +139,11 @@ size_t sio_size_##name(struct name *s);                                 \
  */                                                                     \
 void sio_free_##name(struct name *s);
 
+#ifdef __cplusplus
+}
+#endif // __cplusplus
+
+
 #define FIELD_8(name)
 #define FIELD_16(name)
 #define FIELD_STRUCT(name, s)
@@ -148,7 +160,6 @@ void sio_free_##name(struct name *s);
 #undef  FIELD_DYN_8
 #undef  FIELD_DYN_STRUCT
 #undef  END
-
 
 /* Undef for sanity, applications should undef it too for coherence */
 #undef SIO_INCLUDE

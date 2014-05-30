@@ -14,6 +14,13 @@
  * generate some functions for IO which fit his needs.
  */
 
+#ifdef __cplusplus
+#define DISABLE_FOR_CXX(x)
+#else
+#define DISABLE_FOR_CXX(x) x
+#endif // __cplusplus
+
+
 #include "protocol.h"
 
 /*
@@ -37,7 +44,9 @@ struct packet {
 	size_t pdata_len;       /* Length in bytes of packet data */
 };
 
+DISABLE_FOR_CXX(
 static const struct packet PACKET_INIT;
+)
 
 /*
  * Packet type, used to fill the field 'type' of a packet header.
