@@ -18,7 +18,7 @@
 #define DISABLE_FOR_CXX(x)
 #else
 #define DISABLE_FOR_CXX(x) x
-#endif // __cplusplus
+#endif
 
 
 #include "protocol.h"

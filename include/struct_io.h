@@ -58,7 +58,7 @@
 extern "C" {
 #else
 #define DISABLE_FOR_CXX(x) x
-#endif // __cplusplus
+#endif
 
 #define BEGIN(name)                                                     \
 DISABLE_FOR_CXX(                                                        \
@@ -141,7 +141,7 @@ void sio_free_##name(struct name *s);
 
 #ifdef __cplusplus
 }
-#endif // __cplusplus
+#endif
 
 
 #define FIELD_8(name)

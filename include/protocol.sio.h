@@ -1,3 +1,9 @@
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 BEGIN(packet_header)
 	FIELD_16(type)
 	FIELD_16(length)
@@ -55,3 +61,8 @@ BEGIN(game_state)
 	FIELD_16(move_count)
 	FIELD_DYN_STRUCT(moves, move, get_move_count)
 END()
+
+
+#ifdef __cplusplus
+}
+#endif
